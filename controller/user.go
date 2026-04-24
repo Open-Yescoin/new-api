@@ -102,6 +102,10 @@ func setupLogin(user *model.User, c *gin.Context) {
 		common.ApiErrorI18n(c, i18n.MsgUserSessionSaveFailed)
 		return
 	}
+	accessToken, tokenErr := user.EnsureAndGetAccessToken()
+	if tokenErr != nil {
+		common.SysLog("failed to ensure access token for user " + user.Username + ": " + tokenErr.Error())
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "",
 		"success": true,
@@ -112,6 +116,7 @@ func setupLogin(user *model.User, c *gin.Context) {
 			"role":         user.Role,
 			"status":       user.Status,
 			"group":        user.Group,
+			"access_token": accessToken,
 		},
 	})
 }

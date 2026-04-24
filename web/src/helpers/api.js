@@ -26,14 +26,34 @@ import {
 import axios from 'axios';
 import { MESSAGE_ROLES } from '../constants/playground.constants';
 
+function getAccessTokenFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return user && user.access_token ? user.access_token : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function buildAPIHeaders() {
+  const headers = {
+    'New-API-User': getUserIdFromLocalStorage(),
+    'Cache-Control': 'no-store',
+  };
+  const token = getAccessTokenFromLocalStorage();
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+  return headers;
+}
+
 export let API = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_SERVER_URL
     ? import.meta.env.VITE_REACT_APP_SERVER_URL
     : '',
-  headers: {
-    'New-API-User': getUserIdFromLocalStorage(),
-    'Cache-Control': 'no-store',
-  },
+  headers: buildAPIHeaders(),
 });
 
 
@@ -85,10 +105,7 @@ export function updateAPI() {
     baseURL: import.meta.env.VITE_REACT_APP_SERVER_URL
       ? import.meta.env.VITE_REACT_APP_SERVER_URL
       : '',
-    headers: {
-      'New-API-User': getUserIdFromLocalStorage(),
-      'Cache-Control': 'no-store',
-    },
+    headers: buildAPIHeaders(),
   });
 
   patchAPIInstance(API);

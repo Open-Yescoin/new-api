@@ -76,6 +76,20 @@ func (user *User) SetAccessToken(token string) {
 	user.AccessToken = &token
 }
 
+// EnsureAndGetAccessToken generates and persists an access token if the user
+// does not already have one, then returns the token string.
+func (user *User) EnsureAndGetAccessToken() (string, error) {
+	if user.AccessToken != nil && *user.AccessToken != "" {
+		return *user.AccessToken, nil
+	}
+	token := common.GetUUID()
+	user.SetAccessToken(token)
+	if err := DB.Model(user).Update("access_token", token).Error; err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 func (user *User) GetSetting() dto.UserSetting {
 	setting := dto.UserSetting{}
 	if user.Setting != "" {
