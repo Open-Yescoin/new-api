@@ -195,7 +195,7 @@ const FooterBar = () => {
             </Typography.Text>
           </div>
 
-          <div className='text-sm'>
+          {/* <div className='text-sm'>
             <span className='!text-semi-color-text-1'>
               {t('设计与开发由')}{' '}
             </span>
@@ -205,9 +205,9 @@ const FooterBar = () => {
               rel='noopener noreferrer'
               className='!text-semi-color-primary font-medium'
             >
-              New API
+              Token123
             </a>
-          </div>
+          </div> */}
         </div>
       </footer>
     ),
@@ -237,7 +237,7 @@ const FooterBar = () => {
                 rel='noopener noreferrer'
                 className='!text-semi-color-primary font-medium'
               >
-                New API
+                Token123
               </a>
             </div>
           </div>
