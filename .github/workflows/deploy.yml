@@ -1,0 +1,312 @@
+name: Deploy new-api
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-new-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to production server
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      SERVER_HOST: ${{ vars.SERVER_HOST }}
+      SERVER_USER: ${{ vars.SERVER_USER || 'ubuntu' }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/home/ubuntu/new-api' }}
+      IMAGE_NAME: ${{ vars.IMAGE_NAME || 'newapi-token123:latest' }}
+      SERVICE_NAME: ${{ vars.SERVICE_NAME || 'new-api' }}
+      CONTAINER_NAME: ${{ vars.CONTAINER_NAME || 'new-api' }}
+      HEALTH_URL: ${{ vars.HEALTH_URL || 'http://127.0.0.1:3000/api/status' }}
+      REQUIRE_DOCKER_HEALTH: ${{ vars.REQUIRE_DOCKER_HEALTH || 'true' }}
+      LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          : "${SERVER_HOST:?SERVER_HOST is required}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key.pem
+          chmod 600 ~/.ssh/deploy_key.pem
+          ssh-keyscan -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Deploy on server
+        run: |
+          set -euo pipefail
+
+          : "${SERVER_HOST:?SERVER_HOST is required}"
+          : "${SERVER_USER:?SERVER_USER is required}"
+          : "${DEPLOY_PATH:?DEPLOY_PATH is required}"
+          : "${IMAGE_NAME:?IMAGE_NAME is required}"
+          : "${SERVICE_NAME:?SERVICE_NAME is required}"
+          : "${CONTAINER_NAME:?CONTAINER_NAME is required}"
+          : "${HEALTH_URL:?HEALTH_URL is required}"
+
+          GITHUB_SHA_SHORT="${GITHUB_SHA::7}"
+
+          ssh -i ~/.ssh/deploy_key.pem "${SERVER_USER}@${SERVER_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' IMAGE_NAME='${IMAGE_NAME}' \
+             SERVICE_NAME='${SERVICE_NAME}' CONTAINER_NAME='${CONTAINER_NAME}' \
+             HEALTH_URL='${HEALTH_URL}' REQUIRE_DOCKER_HEALTH='${REQUIRE_DOCKER_HEALTH}' \
+             GITHUB_SHA_SHORT='${GITHUB_SHA_SHORT}' GITHUB_RUN_ID='${GITHUB_RUN_ID}' \
+             bash -s" << 'ENDSSH'
+          set -Eeuo pipefail
+
+          : "${DEPLOY_PATH:?missing DEPLOY_PATH}"
+          : "${IMAGE_NAME:?missing IMAGE_NAME}"
+          : "${SERVICE_NAME:?missing SERVICE_NAME}"
+          : "${CONTAINER_NAME:?missing CONTAINER_NAME}"
+          : "${HEALTH_URL:?missing HEALTH_URL}"
+          : "${GITHUB_SHA_SHORT:?missing GITHUB_SHA_SHORT}"
+          : "${GITHUB_RUN_ID:?missing GITHUB_RUN_ID}"
+
+          BACKUP_CREATED=0
+          STASH_CREATED=0
+          STASH_POP_ATTEMPTED=0
+          IMAGE_MUTATED=0
+          CONTAINER_MUTATED=0
+          ROLLBACK_RUNNING=0
+          DEPLOY_FAILED=0
+
+          image_repo="${IMAGE_NAME%:*}"
+          backup_tag="${image_repo}:backup-${GITHUB_SHA_SHORT}"
+
+          health_check() {
+            label="$1"
+            echo "==> waiting for ${label} health..."
+
+            for i in $(seq 1 24); do
+              docker_health=""
+              docker_health="$(sudo docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}<no value>{{end}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+
+              http_ok=0
+              if curl -sf "${HEALTH_URL}" >/dev/null 2>&1; then
+                http_ok=1
+              fi
+
+              if [ "${REQUIRE_DOCKER_HEALTH}" = "false" ]; then
+                if [ "${http_ok}" -eq 1 ]; then
+                  echo "✓ ${label} healthy via HTTP (${HEALTH_URL})"
+                  return 0
+                fi
+              else
+                if [ "${docker_health}" = "healthy" ] && [ "${http_ok}" -eq 1 ]; then
+                  echo "✓ ${label} healthy via Docker health and HTTP"
+                  return 0
+                fi
+              fi
+
+              echo "   attempt ${i}/24: docker_health=${docker_health:-empty}, http_ok=${http_ok}; retry in 5s"
+              sleep 5
+            done
+
+            echo "✗ ${label} health check failed"
+            sudo docker ps --filter "name=${CONTAINER_NAME}" || true
+            sudo docker inspect "${CONTAINER_NAME}" || true
+            sudo docker logs --tail=120 -t "${CONTAINER_NAME}" || true
+            sudo docker compose logs --tail=120 -t "${SERVICE_NAME}" || true
+            return 1
+          }
+
+          restore_stash_if_needed() {
+            if [ "${STASH_CREATED}" = "1" ] && [ "${STASH_POP_ATTEMPTED}" != "1" ]; then
+              echo "==> restoring deployment stash..."
+              STASH_POP_ATTEMPTED=1
+              git stash pop stash@{0} || echo "✗ stash restore failed; manual cleanup required"
+            fi
+          }
+
+          rollback() {
+            exit_code=$?
+            if [ "${ROLLBACK_RUNNING}" = "1" ]; then
+              exit "${exit_code}"
+            fi
+            ROLLBACK_RUNNING=1
+            set +e
+
+            if [ "${exit_code}" -eq 0 ]; then
+              exit 0
+            fi
+
+            echo "==> deploy failed with exit code ${exit_code}"
+            restore_stash_if_needed
+
+            if { [ "${IMAGE_MUTATED}" = "1" ] || [ "${CONTAINER_MUTATED}" = "1" ]; } \
+              && [ "${BACKUP_CREATED}" = "1" ] \
+              && sudo docker image inspect "${backup_tag}" >/dev/null 2>&1; then
+              echo "==> rolling back image ${IMAGE_NAME} to ${backup_tag}..."
+              sudo docker tag "${backup_tag}" "${IMAGE_NAME}"
+              cd "${DEPLOY_PATH}"
+              sudo docker compose up -d --no-build --force-recreate "${SERVICE_NAME}"
+              if health_check "rollback"; then
+                echo "✓ rollback healthy"
+              else
+                echo "✗ rollback health check failed"
+              fi
+            else
+              echo "==> skipping image rollback; image/container was not mutated or backup is unavailable"
+            fi
+
+            exit "${exit_code}"
+          }
+
+          trap rollback EXIT
+
+          echo "==> checking Docker access..."
+          sudo -n docker ps >/dev/null
+          sudo docker compose version >/dev/null
+
+          echo "==> backing up current image ${IMAGE_NAME} to ${backup_tag}..."
+          sudo docker tag "${IMAGE_NAME}" "${backup_tag}"
+          BACKUP_CREATED=1
+
+          cd "${DEPLOY_PATH}"
+
+          echo "==> checking git state..."
+          current_branch="$(git symbolic-ref --short HEAD)"
+          if [ "${current_branch}" != "main" ]; then
+            echo "✗ expected main branch, got ${current_branch}"
+            DEPLOY_FAILED=1
+            exit 1
+          fi
+
+          if git status --porcelain=v1 --untracked-files=all | grep -E '^(UU|AA|DD|AU|UD|UA|DU)' >/dev/null; then
+            echo "✗ unresolved git conflicts detected"
+            DEPLOY_FAILED=1
+            exit 1
+          fi
+
+          stash_count_before="$(git stash list | wc -l | tr -d ' ')"
+          git stash push -u -m "github-actions-deploy-${GITHUB_RUN_ID}"
+          stash_count_after="$(git stash list | wc -l | tr -d ' ')"
+          if [ "${stash_count_after}" -gt "${stash_count_before}" ]; then
+            STASH_CREATED=1
+          fi
+
+          echo "==> pulling latest main..."
+          git fetch origin main
+          git merge --ff-only origin/main
+
+          if [ "${STASH_CREATED}" = "1" ]; then
+            echo "==> restoring deployment stash..."
+            STASH_POP_ATTEMPTED=1
+            git stash pop stash@{0}
+          fi
+
+          echo "==> validating compose image mode..."
+          sudo docker compose config | grep -F "image: ${IMAGE_NAME}" >/dev/null
+          sudo docker compose config --format json | SERVICE_NAME="${SERVICE_NAME}" python3 -c 'import json, os, sys
+          cfg = json.load(sys.stdin)
+          svc = os.environ["SERVICE_NAME"]
+          service = cfg.get("services", {}).get(svc)
+          if service is None:
+              print(f"✗ {svc} is missing from compose services", file=sys.stderr)
+              sys.exit(1)
+          if service.get("build") is not None:
+              print(f"✗ {svc} uses build: in compose; image rollback would be unsafe", file=sys.stderr)
+              sys.exit(1)
+          '
+
+          before_id="$(sudo docker inspect --format='{{.Id}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+          before_started="$(sudo docker inspect --format='{{.State.StartedAt}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+
+          echo "==> building ${IMAGE_NAME}..."
+          if ! sudo docker build -t "${IMAGE_NAME}" .; then
+            DEPLOY_FAILED=1
+            exit 1
+          fi
+          IMAGE_MUTATED=1
+
+          echo "==> recreating ${SERVICE_NAME}..."
+          CONTAINER_MUTATED=1
+          sudo docker compose up -d --no-build --force-recreate "${SERVICE_NAME}"
+
+          after_id="$(sudo docker inspect --format='{{.Id}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+          after_started="$(sudo docker inspect --format='{{.State.StartedAt}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+
+          if [ -n "${before_id}" ] && [ "${before_id}" = "${after_id}" ] && [ "${before_started}" = "${after_started}" ]; then
+            echo "✗ container was not recreated"
+            DEPLOY_FAILED=1
+            exit 1
+          fi
+
+          if ! health_check "deployment"; then
+            DEPLOY_FAILED=1
+            exit 1
+          fi
+
+          echo "==> pruning old backup images..."
+          sudo docker images "${image_repo}" --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' \
+            | awk '$1 ~ /:backup-/ {print}' \
+            | sort -rk2 \
+            | awk 'NR > 5 {print $1}' \
+            | xargs -r sudo docker rmi || true
+          sudo docker image prune -f >/dev/null || true
+
+          trap - EXIT
+          echo "✓ deployment complete"
+          ENDSSH
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key.pem
+
+      - name: Notify Lark on success
+        if: success() && env.LARK_WEBHOOK != ''
+        continue-on-error: true
+        run: |
+          curl -X POST "${LARK_WEBHOOK}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "msg_type": "interactive",
+              "card": {
+                "config": {"wide_screen_mode": true},
+                "header": {
+                  "title": {"tag": "plain_text", "content": "new-api 部署成功"},
+                  "template": "green"
+                },
+                "elements": [{
+                  "tag": "div",
+                  "text": {
+                    "tag": "lark_md",
+                    "content": "**仓库**: ${{ github.repository }}\n**分支**: ${{ github.ref_name }}\n**提交**: ${{ github.sha }}\n**触发**: ${{ github.actor }}\n[查看 Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+                  }
+                }]
+              }
+            }'
+
+      - name: Notify Lark on failure
+        if: failure() && env.LARK_WEBHOOK != ''
+        continue-on-error: true
+        run: |
+          curl -X POST "${LARK_WEBHOOK}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "msg_type": "interactive",
+              "card": {
+                "config": {"wide_screen_mode": true},
+                "header": {
+                  "title": {"tag": "plain_text", "content": "new-api 部署失败"},
+                  "template": "red"
+                },
+                "elements": [{
+                  "tag": "div",
+                  "text": {
+                    "tag": "lark_md",
+                    "content": "**仓库**: ${{ github.repository }}\n**分支**: ${{ github.ref_name }}\n**提交**: ${{ github.sha }}\n**触发**: ${{ github.actor }}\n已按阶段状态尝试自动回滚；如回滚也未恢复健康，请查看 Actions 日志。\n[查看 Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+                  }
+                }]
+              }
+            }'
