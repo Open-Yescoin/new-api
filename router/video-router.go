@@ -49,4 +49,17 @@ func SetVideoRouter(router *gin.Engine) {
 		// Maps to: /?Action=CVSync2AsyncSubmitTask&Version=2022-08-31 and /?Action=CVSync2AsyncGetResult&Version=2022-08-31
 		jimengOfficialGroup.POST("/", controller.RelayTask)
 	}
+
+	seedanceAssetGroup := router.Group("/doubao/open")
+	seedanceAssetGroup.Use(middleware.RouteTag("relay"))
+	seedanceAssetGroup.Use(middleware.TokenAuth())
+	{
+		seedanceAssetGroup.POST("/CreateVisualValidateSession", controller.RelayCreateVisualValidateSession)
+		seedanceAssetGroup.POST("/GetVisualValidateResult", controller.RelayGetVisualValidateResult)
+		seedanceAssetGroup.POST("/ListAssets", controller.RelayListAssets)
+		seedanceAssetGroup.POST("/GetAsset", controller.RelayGetAsset)
+		seedanceAssetGroup.POST("/CreateAsset", controller.RelayCreateAsset)
+		seedanceAssetGroup.POST("/UpdateAsset", controller.RelayUpdateAsset)
+		seedanceAssetGroup.POST("/DeleteAsset", controller.RelayDeleteAsset)
+	}
 }
