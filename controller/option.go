@@ -75,6 +75,13 @@ func GetOptions(c *gin.Context) {
 	common.OptionMapRWMutex.Lock()
 	for k, v := range common.OptionMap {
 		value := common.Interface2String(v)
+		if k == "VolcAssetConfig" {
+			publicValue, err := common.Marshal(system_setting.VolcAssetConfig.Public())
+			if err != nil {
+				continue
+			}
+			value = string(publicValue)
+		}
 		isSensitiveKey := strings.HasSuffix(k, "Token") ||
 			strings.HasSuffix(k, "Secret") ||
 			strings.HasSuffix(k, "Key") ||

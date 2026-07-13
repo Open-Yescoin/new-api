@@ -441,7 +441,7 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 						if claudeFileMessage != nil {
 							claudeMediaMessages = append(claudeMediaMessages, *claudeFileMessage)
 						}
-					default:
+					case dto.ContentTypeImageURL:
 						source := mediaMessage.ToFileSource()
 						if source == nil {
 							continue
@@ -464,6 +464,8 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 						claudeMediaMessage.Source.MediaType = mimeType
 						claudeMediaMessage.Source.Data = base64Data
 						claudeMediaMessages = append(claudeMediaMessages, claudeMediaMessage)
+						continue
+					default:
 						continue
 					}
 				}

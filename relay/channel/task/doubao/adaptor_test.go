@@ -8,6 +8,7 @@ import (
 	"github.com/QuantumNous/new-api/model"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
 
 func TestForceSeedanceAliasResolution(t *testing.T) {
@@ -114,6 +115,44 @@ func TestEstimateBillingUsesSeedance15SilentUnitPrice(t *testing.T) {
 	if got != 1.2/2.4 {
 		t.Fatalf("seedance_unit_price = %v, want %v", got, 1.2/2.4)
 	}
+}
+
+func TestConvertToRequestPayloadPreservesAssetReferences(t *testing.T) {
+	request := relaycommon.TaskSubmitReq{
+		Model:  "Seedance-2.0-海外版",
+		Prompt: "保持已授权人物特征并参考视频动作",
+		Metadata: map[string]interface{}{
+			"content": []interface{}{
+				map[string]interface{}{
+					"type": "image_url",
+					"image_url": map[string]interface{}{
+						"url": "asset://asset-image-1",
+					},
+					"role": "reference_image",
+				},
+				map[string]interface{}{
+					"type": "video_url",
+					"video_url": map[string]interface{}{
+						"url": "asset://asset-video-1",
+					},
+					"role": "reference_video",
+				},
+			},
+		},
+	}
+
+	payload, err := (&TaskAdaptor{}).convertToRequestPayload(&request)
+
+	require.NoError(t, err)
+	require.Len(t, payload.Content, 3)
+	require.Equal(t, "image_url", payload.Content[0].Type)
+	require.Equal(t, "asset://asset-image-1", payload.Content[0].ImageURL.URL)
+	require.Equal(t, "reference_image", payload.Content[0].Role)
+	require.Equal(t, "video_url", payload.Content[1].Type)
+	require.Equal(t, "asset://asset-video-1", payload.Content[1].VideoURL.URL)
+	require.Equal(t, "reference_video", payload.Content[1].Role)
+	require.Equal(t, "text", payload.Content[2].Type)
+	require.Equal(t, request.Prompt, payload.Content[2].Text)
 }
 
 func TestParseTaskResultFallsBackToCompletionTokens(t *testing.T) {
