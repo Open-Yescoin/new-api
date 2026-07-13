@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/system_setting"
+	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -107,6 +110,29 @@ func TestAssetServiceRequiresRealPersonAuthorizationBeforeCreate(t *testing.T) {
 
 	require.ErrorIs(t, err, ErrAssetGroupNotAuthorized)
 	require.Empty(t, api.calls)
+}
+
+func TestModelAssetGroupRepositoryRejectsLegacyBindingWithoutActiveActor(t *testing.T) {
+	oldDB := model.DB
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&model.VolcAssetUserGroup{}, &model.VolcAssetActor{}))
+	model.DB = db
+	t.Cleanup(func() { model.DB = oldDB })
+
+	require.NoError(t, model.SaveVolcAssetUserGroup(42, "legacy-group"))
+	_, err = NewModelAssetGroupRepository().Get(42)
+	require.ErrorIs(t, err, model.ErrVolcAssetActorAuthorizationRequired)
+
+	days := 30
+	actor, err := model.CreateVolcAssetActor(42, "默认演员", &days, time.Now().Unix())
+	require.NoError(t, err)
+	require.NoError(t, db.Model(actor).Update("is_default", true).Error)
+	require.NoError(t, model.ActivateVolcAssetActor(42, actor.Id, "active-group", "v1", time.Now().Unix()))
+
+	binding, err := NewModelAssetGroupRepository().Get(42)
+	require.NoError(t, err)
+	require.Equal(t, "active-group", binding.GroupId)
 }
 
 func TestAssetServiceCreatesImageAndVideoInVerifiedGroup(t *testing.T) {

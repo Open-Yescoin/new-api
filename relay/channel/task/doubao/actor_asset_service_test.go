@@ -48,9 +48,10 @@ func TestActorAssetServiceScopesCreateAndListAndSavesMappings(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, actorA.Id, mapped.Id)
 
-	api.responses["ListAssets"] = ListAssetsResponse{Items: []AssetItem{{Id: "asset-b", GroupId: "group-b"}}}
-	_, err = service.ListActorAssets(context.Background(), 42, actorB.Id, ListAssetsRequest{})
+	api.responses["ListAssets"] = ListAssetsResponse{Items: []AssetItem{{Id: "asset-b", GroupId: "group-b"}}, TotalCount: 7}
+	listed, err := service.ListActorAssets(context.Background(), 42, actorB.Id, ListAssetsRequest{})
 	require.NoError(t, err)
+	require.EqualValues(t, 7, listed.TotalCount)
 	mapped, err = model.FindVolcAssetActorByAsset(42, "asset-b")
 	require.NoError(t, err)
 	require.Equal(t, actorB.Id, mapped.Id)

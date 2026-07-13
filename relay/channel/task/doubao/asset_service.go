@@ -126,11 +126,18 @@ func NewModelAssetGroupRepository() AssetGroupRepository {
 }
 
 func (modelAssetGroupRepository) Get(userId int) (AssetGroupBinding, error) {
-	binding, err := model.GetVolcAssetUserGroup(userId)
+	actor, err := model.GetDefaultVolcAssetActor(userId)
+	if errors.Is(err, model.ErrVolcAssetActorNotFound) {
+		return AssetGroupBinding{}, model.ErrVolcAssetActorAuthorizationRequired
+	}
 	if err != nil {
 		return AssetGroupBinding{}, err
 	}
-	return AssetGroupBinding{GroupId: binding.GroupId, UpdatedAt: binding.UpdatedAt}, nil
+	actor, err = model.RequireVolcAssetActorActiveAt(userId, actor.Id, time.Now().Unix())
+	if err != nil {
+		return AssetGroupBinding{}, err
+	}
+	return AssetGroupBinding{GroupId: actor.GroupId, UpdatedAt: actor.UpdatedAt}, nil
 }
 
 func (modelAssetGroupRepository) Save(userId int, groupId string) error {
@@ -174,7 +181,6 @@ func (s *AssetService) ListActorAssets(ctx context.Context, userId, actorId int,
 		}
 	}
 	response.Items = items
-	response.TotalCount = int64(len(items))
 	return &response, nil
 }
 
