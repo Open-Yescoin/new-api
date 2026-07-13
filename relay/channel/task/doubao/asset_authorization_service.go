@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const assetAuthorizationSessionTTL = 5 * time.Minute
+const assetAuthorizationSessionTTL = 15 * time.Minute
 
 var (
 	ErrInvalidAssetAuthorizationResponse = errors.New("BytePlus returned an invalid asset authorization response")

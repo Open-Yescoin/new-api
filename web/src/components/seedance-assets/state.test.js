@@ -22,11 +22,11 @@ describe('Seedance authorization state', () => {
     );
   });
 
-  test('polling ends at a terminal state or five minutes', () => {
-    expect(shouldContinueAuthorizationPolling(AUTH_STATE.WAITING, 299999)).toBe(
+  test('polling ends at a terminal state or fifteen minutes', () => {
+    expect(shouldContinueAuthorizationPolling(AUTH_STATE.WAITING, 899999)).toBe(
       true,
     );
-    expect(shouldContinueAuthorizationPolling(AUTH_STATE.WAITING, 300000)).toBe(
+    expect(shouldContinueAuthorizationPolling(AUTH_STATE.WAITING, 900000)).toBe(
       false,
     );
     expect(
@@ -38,8 +38,8 @@ describe('Seedance authorization state', () => {
     expect(authorizationStateFromPollError(503, 'asset_upstream_error')).toBe(
       AUTH_STATE.WAITING,
     );
-    expect(
-      authorizationStateFromPollError(410, 'authorization_expired'),
-    ).toBe(AUTH_STATE.EXPIRED);
+    expect(authorizationStateFromPollError(410, 'authorization_expired')).toBe(
+      AUTH_STATE.EXPIRED,
+    );
   });
 });

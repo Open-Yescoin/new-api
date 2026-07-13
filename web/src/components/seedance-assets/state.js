@@ -9,6 +9,8 @@ export const AUTH_STATE = Object.freeze({
   FAILED: 'failed',
 });
 
+const AUTHORIZATION_POLL_TIMEOUT_MS = 15 * 60 * 1000;
+
 export function authorizationStateFromStatus(status) {
   if (!status) {
     return AUTH_STATE.CHECKING;
@@ -26,7 +28,9 @@ export function authorizationStateFromStatus(status) {
 }
 
 export function shouldContinueAuthorizationPolling(state, elapsedMs) {
-  return state === AUTH_STATE.WAITING && elapsedMs < 300000;
+  return (
+    state === AUTH_STATE.WAITING && elapsedMs < AUTHORIZATION_POLL_TIMEOUT_MS
+  );
 }
 
 export function authorizationStateFromPollError(status, errorCode) {
