@@ -50,6 +50,8 @@ import OAuth2Callback from './components/auth/OAuth2Callback';
 import PersonalSetting from './components/settings/PersonalSetting';
 import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
+import SeedanceAssets from './pages/SeedanceAssets';
+import SeedanceAuthorizationCallback from './pages/SeedanceAuthorizationCallback';
 
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -108,6 +110,10 @@ function App() {
         />
         <Route path='/forbidden' element={<Forbidden />} />
         <Route
+          path='/seedance/authorization/callback'
+          element={<SeedanceAuthorizationCallback />}
+        />
+        <Route
           path='/console/models'
           element={
             <AdminRoute>
@@ -144,6 +150,14 @@ function App() {
           element={
             <PrivateRoute>
               <Token />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/console/seedance-assets'
+          element={
+            <PrivateRoute>
+              <SeedanceAssets />
             </PrivateRoute>
           }
         />

@@ -49,6 +49,7 @@ const routerMap = {
   deployment: '/console/deployment',
   playground: '/console/playground',
   personal: '/console/personal',
+  seedanceAssets: '/console/seedance-assets',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -83,6 +84,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('令牌管理'),
         itemKey: 'token',
         to: '/token',
+      },
+      {
+        text: t('真人素材库'),
+        itemKey: 'seedanceAssets',
+        to: '/seedance-assets',
       },
       {
         text: t('使用日志'),
