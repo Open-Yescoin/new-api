@@ -85,6 +85,22 @@ func TestExpireVolcAssetAuthorizationConsumesOnlyMatchingPendingSession(t *testi
 	require.ErrorIs(t, err, ErrVolcAssetAuthorizationNotFound)
 }
 
+func TestHasPendingVolcAssetAuthorizationIgnoresOtherUsersAndExpiresStaleRows(t *testing.T) {
+	setupVolcAssetAuthorizationTestDB(t)
+	digest := authorizationDigest("raw-byted-token")
+	require.NoError(t, mustStartVolcAssetAuthorization(42, digest, 150, 100))
+
+	pending, err := HasPendingVolcAssetAuthorization(43, 120)
+	require.NoError(t, err)
+	require.False(t, pending)
+	pending, err = HasPendingVolcAssetAuthorization(42, 120)
+	require.NoError(t, err)
+	require.True(t, pending)
+	pending, err = HasPendingVolcAssetAuthorization(42, 151)
+	require.NoError(t, err)
+	require.False(t, pending)
+}
+
 func TestCompleteVolcAssetAuthorizationBindsGroupAndConsumesSession(t *testing.T) {
 	setupVolcAssetAuthorizationTestDB(t)
 	digest := authorizationDigest("raw-byted-token")

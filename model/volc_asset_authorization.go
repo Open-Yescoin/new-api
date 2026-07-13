@@ -63,6 +63,28 @@ func ExpireVolcAssetAuthorization(userId int, tokenHash string, now int64) error
 	return ErrVolcAssetAuthorizationNotFound
 }
 
+func HasPendingVolcAssetAuthorization(userId int, now int64) (bool, error) {
+	if userId <= 0 {
+		return false, fmt.Errorf("invalid user id")
+	}
+	if err := DB.Model(&VolcAssetAuthorizationSession{}).
+		Where("user_id = ? AND status = ? AND expires_at <= ?", userId, VolcAssetAuthorizationPending, now).
+		Updates(map[string]any{
+			"status":     VolcAssetAuthorizationExpired,
+			"updated_at": now,
+		}).Error; err != nil {
+		return false, err
+	}
+
+	var count int64
+	if err := DB.Model(&VolcAssetAuthorizationSession{}).
+		Where("user_id = ? AND status = ? AND expires_at > ?", userId, VolcAssetAuthorizationPending, now).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func validateVolcAssetAuthorizationInput(userId int, tokenHash string) error {
 	if userId <= 0 {
 		return fmt.Errorf("invalid user id")
