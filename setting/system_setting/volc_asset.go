@@ -36,7 +36,7 @@ func (v VolcAssetSettings) GetProjectName() string {
 
 func (v VolcAssetSettings) GetGroupType() string {
 	if v.GroupType == "" {
-		return "AIGC"
+		return "LivenessFace"
 	}
 	return v.GroupType
 }

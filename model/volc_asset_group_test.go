@@ -37,7 +37,7 @@ func TestSaveAndGetVolcAssetUserGroup(t *testing.T) {
 	require.Equal(t, "group-42", got.GroupId)
 }
 
-func TestSaveVolcAssetUserGroupKeepsFirstBinding(t *testing.T) {
+func TestSaveVolcAssetUserGroupUpdatesBindingAfterReauthorization(t *testing.T) {
 	setupVolcAssetGroupTestDB(t)
 
 	require.NoError(t, SaveVolcAssetUserGroup(42, "group-first"))
@@ -45,7 +45,7 @@ func TestSaveVolcAssetUserGroupKeepsFirstBinding(t *testing.T) {
 	got, err := GetVolcAssetUserGroup(42)
 
 	require.NoError(t, err)
-	require.Equal(t, "group-first", got.GroupId)
+	require.Equal(t, "group-second", got.GroupId)
 }
 
 func TestSaveVolcAssetUserGroupRejectsInvalidInput(t *testing.T) {

@@ -13,7 +13,7 @@ func TestVolcAssetSettingsDefaults(t *testing.T) {
 
 	require.Equal(t, "ap-southeast-1", cfg.GetRegion())
 	require.Equal(t, "default", cfg.GetProjectName())
-	require.Equal(t, "AIGC", cfg.GetGroupType())
+	require.Equal(t, "LivenessFace", cfg.GetGroupType())
 	require.Equal(t, "https://ark.ap-southeast-1.byteplusapi.com", cfg.GetBaseURL())
 }
 

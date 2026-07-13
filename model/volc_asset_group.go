@@ -32,16 +32,19 @@ func SaveVolcAssetUserGroup(userId int, groupId string) error {
 		return fmt.Errorf("invalid Volcengine asset user group binding")
 	}
 
+	now := common.GetTimestamp()
 	var existing VolcAssetUserGroup
 	err := DB.Where("user_id = ?", userId).First(&existing).Error
 	if err == nil {
-		return nil
+		return DB.Model(&existing).Updates(map[string]any{
+			"group_id":   groupId,
+			"updated_at": now,
+		}).Error
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
-	now := common.GetTimestamp()
 	created := VolcAssetUserGroup{
 		UserId:    userId,
 		GroupId:   groupId,
