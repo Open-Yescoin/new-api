@@ -151,6 +151,17 @@ func ActivateVolcAssetActor(userId, actorId int, groupId, consentVersion string,
 		return fmt.Errorf("invalid Seedance actor authorization")
 	}
 	return DB.Transaction(func(tx *gorm.DB) error {
+		return activateVolcAssetActor(tx, userId, actorId, groupId, consentVersion, now)
+	})
+}
+
+func activateVolcAssetActor(tx *gorm.DB, userId, actorId int, groupId, consentVersion string, now int64) error {
+	groupId = strings.TrimSpace(groupId)
+	consentVersion = strings.TrimSpace(consentVersion)
+	if groupId == "" || consentVersion == "" {
+		return fmt.Errorf("invalid Seedance actor authorization")
+	}
+	return func() error {
 		var actor VolcAssetActor
 		err := tx.Where("user_id = ? AND id = ?", userId, actorId).First(&actor).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -173,7 +184,7 @@ func ActivateVolcAssetActor(userId, actorId int, groupId, consentVersion string,
 			"updated_at":               now,
 		}
 		return tx.Model(&actor).Updates(updates).Error
-	})
+	}()
 }
 
 func RequireVolcAssetActorActiveAt(userId, actorId int, now int64) (*VolcAssetActor, error) {
