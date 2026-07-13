@@ -3611,6 +3611,23 @@
     "默认折叠侧边栏": "サイドバーをデフォルトで折りたたむ",
     "默认测试模型": "デフォルトテストモデル",
     "默认用户消息": "こんにちは",
-    "默认补全倍率": "デフォルト補完倍率"
+    "默认补全倍率": "デフォルト補完倍率",
+    "Seedance 素材库": "Seedance 素材ライブラリ",
+    "加载 Seedance 素材库配置失败": "Seedance 素材設定の読み込みに失敗しました",
+    "请输入 BytePlus Access Key": "BytePlus Access Key を入力してください",
+    "Seedance 素材库配置已更新": "Seedance 素材設定を更新しました",
+    "更新 Seedance 素材库配置失败": "Seedance 素材設定の更新に失敗しました",
+    "真人素材必须先完成 BytePlus H5 授权与活体校验，再注册为 LivenessFace 素材。普通上传不能直接用于包含真人脸部的 Seedance 2.0 生成。": "実在人物の素材は、BytePlus H5 の同意と生体確認を完了してから LivenessFace 素材として登録する必要があります。通常のアップロードは、実在人物の顔を含む Seedance 2.0 生成には直接使用できません。",
+    "BytePlus Access Key": "BytePlus Access Key",
+    "BytePlus Secret Key": "BytePlus Secret Key",
+    "密钥已配置；留空保存将保留现有密钥。": "シークレットは設定済みです。空欄で保存すると現在の値を保持します。",
+    "尚未配置密钥。密钥保存后不会回显。": "シークレットは未設定です。保存後は表示されません。",
+    "BytePlus 区域": "BytePlus リージョン",
+    "请输入 BytePlus 区域": "BytePlus リージョンを入力してください",
+    "BytePlus 项目名称": "BytePlus プロジェクト名",
+    "请输入 BytePlus 项目名称": "BytePlus プロジェクト名を入力してください",
+    "素材组类型": "素材グループタイプ",
+    "保存后，用户可通过受 Token 鉴权保护的 /doubao/open 素材接口完成授权、注册、查询与管理。": "保存後、ユーザーはトークンで保護された /doubao/open API を使用して素材の承認、登録、照会、管理を行えます。",
+    "保存 Seedance 素材库配置": "Seedance 素材設定を保存"
   }
 }

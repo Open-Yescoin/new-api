@@ -73,6 +73,7 @@ func InitOptionMap() {
 	common.OptionMap["WorkerUrl"] = system_setting.WorkerUrl
 	common.OptionMap["WorkerValidKey"] = system_setting.WorkerValidKey
 	common.OptionMap["WorkerAllowHttpImageRequestEnabled"] = strconv.FormatBool(system_setting.WorkerAllowHttpImageRequestEnabled)
+	common.OptionMap["VolcAssetConfig"] = volcAssetConfig2JSONString(system_setting.VolcAssetConfig)
 	common.OptionMap["PayAddress"] = ""
 	common.OptionMap["CustomCallbackAddress"] = ""
 	common.OptionMap["EpayId"] = ""
@@ -207,6 +208,11 @@ func SyncOptions(frequency int) {
 }
 
 func UpdateOption(key string, value string) error {
+	preparedValue, err := prepareOptionValue(key, value)
+	if err != nil {
+		return err
+	}
+	value = preparedValue
 	// Save to database first
 	option := Option{
 		Key: key,
@@ -220,6 +226,26 @@ func UpdateOption(key string, value string) error {
 	DB.Save(&option)
 	// Update OptionMap
 	return updateOptionMap(key, value)
+}
+
+func prepareOptionValue(key string, value string) (string, error) {
+	if key != "VolcAssetConfig" {
+		return value, nil
+	}
+	var incoming system_setting.VolcAssetSettings
+	if err := common.UnmarshalJsonStr(value, &incoming); err != nil {
+		return "", err
+	}
+	merged := system_setting.MergeVolcAssetSettings(system_setting.VolcAssetConfig, incoming)
+	return volcAssetConfig2JSONString(merged), nil
+}
+
+func volcAssetConfig2JSONString(cfg system_setting.VolcAssetSettings) string {
+	data, err := common.Marshal(cfg)
+	if err != nil {
+		return "{}"
+	}
+	return string(data)
 }
 
 func updateOptionMap(key string, value string) (err error) {
@@ -351,6 +377,12 @@ func updateOptionMap(key string, value string) (err error) {
 		system_setting.WorkerUrl = value
 	case "WorkerValidKey":
 		system_setting.WorkerValidKey = value
+	case "VolcAssetConfig":
+		var cfg system_setting.VolcAssetSettings
+		err = common.UnmarshalJsonStr(value, &cfg)
+		if err == nil {
+			system_setting.VolcAssetConfig = cfg
+		}
 	case "PayAddress":
 		operation_setting.PayAddress = value
 	case "Chats":

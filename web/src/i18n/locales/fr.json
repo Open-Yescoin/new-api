@@ -3642,6 +3642,23 @@
     "默认折叠侧边栏": "Réduire la barre latérale par défaut",
     "默认测试模型": "Modèle de test par défaut",
     "默认用户消息": "Bonjour",
-    "默认补全倍率": "Taux de complétion par défaut"
+    "默认补全倍率": "Taux de complétion par défaut",
+    "Seedance 素材库": "Bibliothèque de ressources Seedance",
+    "加载 Seedance 素材库配置失败": "Échec du chargement des paramètres Seedance",
+    "请输入 BytePlus Access Key": "Saisissez la clé d’accès BytePlus",
+    "Seedance 素材库配置已更新": "Paramètres Seedance mis à jour",
+    "更新 Seedance 素材库配置失败": "Échec de la mise à jour des paramètres Seedance",
+    "真人素材必须先完成 BytePlus H5 授权与活体校验，再注册为 LivenessFace 素材。普通上传不能直接用于包含真人脸部的 Seedance 2.0 生成。": "Les ressources représentant une personne réelle doivent terminer le consentement H5 et la vérification de présence BytePlus avant d’être enregistrées comme LivenessFace. Un téléversement ordinaire ne peut pas être utilisé directement avec des visages réels dans Seedance 2.0.",
+    "BytePlus Access Key": "Clé d’accès BytePlus",
+    "BytePlus Secret Key": "Clé secrète BytePlus",
+    "密钥已配置；留空保存将保留现有密钥。": "Une clé secrète est configurée ; laissez ce champ vide pour la conserver.",
+    "尚未配置密钥。密钥保存后不会回显。": "Aucune clé secrète configurée. Elle ne sera plus affichée après enregistrement.",
+    "BytePlus 区域": "Région BytePlus",
+    "请输入 BytePlus 区域": "Saisissez la région BytePlus",
+    "BytePlus 项目名称": "Nom du projet BytePlus",
+    "请输入 BytePlus 项目名称": "Saisissez le nom du projet BytePlus",
+    "素材组类型": "Type de groupe de ressources",
+    "保存后，用户可通过受 Token 鉴权保护的 /doubao/open 素材接口完成授权、注册、查询与管理。": "Après enregistrement, les utilisateurs peuvent autoriser, inscrire, consulter et gérer les ressources via les API /doubao/open protégées par jeton.",
+    "保存 Seedance 素材库配置": "Enregistrer les paramètres Seedance"
   }
 }

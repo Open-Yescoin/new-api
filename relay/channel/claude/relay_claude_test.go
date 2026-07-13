@@ -277,7 +277,7 @@ func TestBuildOpenAIStyleUsageFromClaudeUsageDefaultsAggregateCacheCreationTo5m(
 
 func TestRequestOpenAI2ClaudeMessage_IgnoresUnsupportedFileContent(t *testing.T) {
 	request := dto.GeneralOpenAIRequest{
-		Model: "claude-3-5-sonnet",
+		Model: "claude-sonnet-4-6",
 		Messages: []dto.Message{
 			{
 				Role: "user",
@@ -312,7 +312,7 @@ func TestRequestOpenAI2ClaudeMessage_IgnoresUnsupportedFileContent(t *testing.T)
 
 func TestRequestOpenAI2ClaudeMessage_SupportsPDFFileContent(t *testing.T) {
 	request := dto.GeneralOpenAIRequest{
-		Model: "claude-3-5-sonnet",
+		Model: "claude-sonnet-4-6",
 		Messages: []dto.Message{
 			{
 				Role: "user",
@@ -352,7 +352,7 @@ func TestRequestOpenAI2ClaudeMessage_SupportsPDFFileContent(t *testing.T) {
 
 func TestRequestOpenAI2ClaudeMessage_ConvertsTextFileContentToText(t *testing.T) {
 	request := dto.GeneralOpenAIRequest{
-		Model: "claude-3-5-sonnet",
+		Model: "claude-sonnet-4-6",
 		Messages: []dto.Message{
 			{
 				Role: "user",

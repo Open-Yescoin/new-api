@@ -3673,6 +3673,23 @@
     "默认折叠侧边栏": "Default collapse sidebar",
     "默认测试模型": "Default Test Model",
     "默认用户消息": "Default User Message",
-    "默认补全倍率": "Default completion ratio"
+    "默认补全倍率": "Default completion ratio",
+    "Seedance 素材库": "Seedance Asset Library",
+    "加载 Seedance 素材库配置失败": "Failed to load Seedance asset settings",
+    "请输入 BytePlus Access Key": "Enter the BytePlus Access Key",
+    "Seedance 素材库配置已更新": "Seedance asset settings updated",
+    "更新 Seedance 素材库配置失败": "Failed to update Seedance asset settings",
+    "真人素材必须先完成 BytePlus H5 授权与活体校验，再注册为 LivenessFace 素材。普通上传不能直接用于包含真人脸部的 Seedance 2.0 生成。": "Real-person assets must complete BytePlus H5 consent and liveness verification before registration as LivenessFace assets. Ordinary uploads cannot be used directly for Seedance 2.0 generations containing real faces.",
+    "BytePlus Access Key": "BytePlus Access Key",
+    "BytePlus Secret Key": "BytePlus Secret Key",
+    "密钥已配置；留空保存将保留现有密钥。": "A secret is configured; leave this blank to keep it.",
+    "尚未配置密钥。密钥保存后不会回显。": "No secret is configured. Saved secrets are never displayed.",
+    "BytePlus 区域": "BytePlus Region",
+    "请输入 BytePlus 区域": "Enter the BytePlus region",
+    "BytePlus 项目名称": "BytePlus Project Name",
+    "请输入 BytePlus 项目名称": "Enter the BytePlus project name",
+    "素材组类型": "Asset Group Type",
+    "保存后，用户可通过受 Token 鉴权保护的 /doubao/open 素材接口完成授权、注册、查询与管理。": "After saving, users can authorize, register, query, and manage assets through the token-protected /doubao/open endpoints.",
+    "保存 Seedance 素材库配置": "Save Seedance Asset Settings"
   }
 }
