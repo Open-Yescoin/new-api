@@ -4176,6 +4176,23 @@
     "默认折叠侧边栏": "Mặc định thu gọn thanh bên",
     "默认测试模型": "Mô hình kiểm tra mặc định",
     "默认用户消息": "Xin chào",
-    "默认补全倍率": "Tỷ lệ hoàn thành mặc định"
+    "默认补全倍率": "Tỷ lệ hoàn thành mặc định",
+    "Seedance 素材库": "Thư viện tài nguyên Seedance",
+    "加载 Seedance 素材库配置失败": "Không thể tải cấu hình Seedance",
+    "请输入 BytePlus Access Key": "Nhập BytePlus Access Key",
+    "Seedance 素材库配置已更新": "Đã cập nhật cấu hình Seedance",
+    "更新 Seedance 素材库配置失败": "Không thể cập nhật cấu hình Seedance",
+    "真人素材必须先完成 BytePlus H5 授权与活体校验，再注册为 LivenessFace 素材。普通上传不能直接用于包含真人脸部的 Seedance 2.0 生成。": "Tài nguyên người thật phải hoàn tất chấp thuận H5 và xác minh khuôn mặt sống của BytePlus trước khi đăng ký dưới dạng LivenessFace. Tệp tải lên thông thường không thể dùng trực tiếp để tạo khuôn mặt người thật bằng Seedance 2.0.",
+    "BytePlus Access Key": "BytePlus Access Key",
+    "BytePlus Secret Key": "BytePlus Secret Key",
+    "密钥已配置；留空保存将保留现有密钥。": "Đã cấu hình khóa bí mật; để trống khi lưu để giữ khóa hiện tại.",
+    "尚未配置密钥。密钥保存后不会回显。": "Chưa cấu hình khóa bí mật. Khóa sẽ không hiển thị lại sau khi lưu.",
+    "BytePlus 区域": "Khu vực BytePlus",
+    "请输入 BytePlus 区域": "Nhập khu vực BytePlus",
+    "BytePlus 项目名称": "Tên dự án BytePlus",
+    "请输入 BytePlus 项目名称": "Nhập tên dự án BytePlus",
+    "素材组类型": "Loại nhóm tài nguyên",
+    "保存后，用户可通过受 Token 鉴权保护的 /doubao/open 素材接口完成授权、注册、查询与管理。": "Sau khi lưu, người dùng có thể cấp quyền, đăng ký, truy vấn và quản lý tài nguyên qua API /doubao/open được bảo vệ bằng token.",
+    "保存 Seedance 素材库配置": "Lưu cấu hình Seedance"
   }
 }

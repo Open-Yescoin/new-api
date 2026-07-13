@@ -3635,6 +3635,23 @@
     "默认折叠侧边栏": "預設摺疊側邊欄",
     "默认测试模型": "預設測試模型",
     "默认用户消息": "你好",
-    "默认补全倍率": "預設補全倍率"
+    "默认补全倍率": "預設補全倍率",
+    "Seedance 素材库": "Seedance 素材庫",
+    "加载 Seedance 素材库配置失败": "載入 Seedance 素材庫設定失敗",
+    "请输入 BytePlus Access Key": "請輸入 BytePlus Access Key",
+    "Seedance 素材库配置已更新": "Seedance 素材庫設定已更新",
+    "更新 Seedance 素材库配置失败": "更新 Seedance 素材庫設定失敗",
+    "真人素材必须先完成 BytePlus H5 授权与活体校验，再注册为 LivenessFace 素材。普通上传不能直接用于包含真人脸部的 Seedance 2.0 生成。": "真人素材必須先完成 BytePlus H5 授權與活體校驗，再註冊為 LivenessFace 素材。一般上傳不能直接用於包含真人臉部的 Seedance 2.0 生成。",
+    "BytePlus Access Key": "BytePlus Access Key",
+    "BytePlus Secret Key": "BytePlus Secret Key",
+    "密钥已配置；留空保存将保留现有密钥。": "密鑰已設定；留空儲存將保留現有密鑰。",
+    "尚未配置密钥。密钥保存后不会回显。": "尚未設定密鑰。密鑰儲存後不會回顯。",
+    "BytePlus 区域": "BytePlus 區域",
+    "请输入 BytePlus 区域": "請輸入 BytePlus 區域",
+    "BytePlus 项目名称": "BytePlus 專案名稱",
+    "请输入 BytePlus 项目名称": "請輸入 BytePlus 專案名稱",
+    "素材组类型": "素材群組類型",
+    "保存后，用户可通过受 Token 鉴权保护的 /doubao/open 素材接口完成授权、注册、查询与管理。": "儲存後，使用者可透過受 Token 驗證保護的 /doubao/open 素材介面完成授權、註冊、查詢與管理。",
+    "保存 Seedance 素材库配置": "儲存 Seedance 素材庫設定"
   }
 }
