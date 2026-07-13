@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-contrib/sessions"
@@ -43,6 +44,50 @@ func TestSeedanceDashboardRoutesRequireUserAuth(t *testing.T) {
 		request := httptest.NewRequest(parts[0], routeTestPath(parts[1]), nil)
 		engine.ServeHTTP(recorder, request)
 		require.Equal(t, http.StatusUnauthorized, recorder.Code, key)
+	}
+}
+
+func TestSeedanceActorAndPublicAuthorizationRoutes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	engine.Use(sessions.Sessions("session", cookie.NewStore([]byte("test-secret"))))
+	registerSeedanceAssetRoutes(engine.Group("/api"))
+
+	authenticated := []string{
+		"GET /api/seedance/actors",
+		"POST /api/seedance/actors",
+		"PATCH /api/seedance/actors/:actor_id",
+		"DELETE /api/seedance/actors/:actor_id",
+		"GET /api/seedance/actors/:actor_id/authorization",
+		"POST /api/seedance/actors/:actor_id/authorization/session",
+		"POST /api/seedance/actors/:actor_id/authorization/result",
+		"POST /api/seedance/actors/:actor_id/authorization/revoke",
+		"GET /api/seedance/actors/:actor_id/assets",
+		"POST /api/seedance/actors/:actor_id/assets",
+		"GET /api/seedance/actors/:actor_id/assets/:id",
+		"PATCH /api/seedance/actors/:actor_id/assets/:id",
+		"DELETE /api/seedance/actors/:actor_id/assets/:id",
+	}
+	public := []string{
+		"POST /api/seedance/public/authorization/details",
+		"POST /api/seedance/public/authorization/consent",
+		"POST /api/seedance/public/authorization/revoke",
+	}
+	routes := map[string]bool{}
+	for _, route := range engine.Routes() {
+		routes[route.Method+" "+route.Path] = true
+	}
+	for _, route := range append(authenticated, public...) {
+		require.True(t, routes[route], "missing route %s", route)
+	}
+	for _, route := range authenticated {
+		parts := splitMethodAndPath(route)
+		path := strings.ReplaceAll(parts[1], ":actor_id", "1")
+		path = strings.ReplaceAll(path, ":id", "asset-1")
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(parts[0], path, nil)
+		engine.ServeHTTP(recorder, request)
+		require.Equal(t, http.StatusUnauthorized, recorder.Code, route)
 	}
 }
 

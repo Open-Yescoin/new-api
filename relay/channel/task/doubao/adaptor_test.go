@@ -1,6 +1,7 @@
 package doubao
 
 import (
+	"errors"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -8,8 +9,60 @@ import (
 	"github.com/QuantumNous/new-api/model"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/gin-gonic/gin"
+	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
+
+func setupSeedanceAssetGuardTest(t *testing.T) {
+	t.Helper()
+	oldDB := model.DB
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&model.VolcAssetActor{}, &model.VolcAssetActorAsset{}))
+	model.DB = db
+	t.Cleanup(func() { model.DB = oldDB })
+}
+
+func seedanceAssetReferenceRequest(assetID string) relaycommon.TaskSubmitReq {
+	return relaycommon.TaskSubmitReq{Metadata: map[string]interface{}{
+		"content": []interface{}{
+			map[string]interface{}{"type": "image_url", "image_url": map[string]interface{}{"url": "asset://" + assetID}},
+		},
+	}}
+}
+
+func TestValidateSeedanceAssetReferencesEnforcesActorExpiryAndRevocation(t *testing.T) {
+	setupSeedanceAssetGuardTest(t)
+	days := 30
+	expired, err := model.CreateVolcAssetActor(42, "已过期", &days, 10)
+	require.NoError(t, err)
+	require.NoError(t, model.ActivateVolcAssetActor(42, expired.Id, "group-expired", "v1", 100-30*86400))
+	require.NoError(t, model.SaveVolcAssetActorAsset(42, expired.Id, "asset-expired", 20))
+
+	revoked, err := model.CreateVolcAssetActor(42, "已撤回", nil, 11)
+	require.NoError(t, err)
+	require.NoError(t, model.ActivateVolcAssetActor(42, revoked.Id, "group-revoked", "v1", 20))
+	require.NoError(t, model.SaveVolcAssetActorAsset(42, revoked.Id, "asset-revoked", 20))
+	require.NoError(t, model.RevokeVolcAssetActor(42, revoked.Id, 30))
+
+	err = validateSeedanceAssetReferences(42, seedanceAssetReferenceRequest("asset-expired"), 100)
+	require.True(t, errors.Is(err, model.ErrVolcAssetActorExpired))
+	err = validateSeedanceAssetReferences(42, seedanceAssetReferenceRequest("asset-revoked"), 100)
+	require.True(t, errors.Is(err, model.ErrVolcAssetActorRevoked))
+}
+
+func TestValidateSeedanceAssetReferencesAllowsActiveActorOnlyForOwner(t *testing.T) {
+	setupSeedanceAssetGuardTest(t)
+	actor, err := model.CreateVolcAssetActor(42, "有效演员", nil, 10)
+	require.NoError(t, err)
+	require.NoError(t, model.ActivateVolcAssetActor(42, actor.Id, "group-active", "v1", 20))
+	require.NoError(t, model.SaveVolcAssetActorAsset(42, actor.Id, "asset-active", 20))
+
+	require.NoError(t, validateSeedanceAssetReferences(42, seedanceAssetReferenceRequest("asset-active"), 100))
+	err = validateSeedanceAssetReferences(43, seedanceAssetReferenceRequest("asset-active"), 100)
+	require.ErrorIs(t, err, model.ErrVolcAssetActorNotFound)
+}
 
 func TestForceSeedanceAliasResolution(t *testing.T) {
 	req := relaycommon.TaskSubmitReq{Model: "Seedance-2.0-1080P-海外版"}

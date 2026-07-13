@@ -23,6 +23,7 @@ var (
 	ErrVolcAssetActorAuthorizationRequired = errors.New("Seedance actor authorization is required")
 	ErrVolcAssetActorExpired               = errors.New("Seedance actor authorization has expired")
 	ErrVolcAssetActorRevoked               = errors.New("Seedance actor authorization has been revoked")
+	ErrVolcAssetActorInUse                 = errors.New("Seedance actor still has authorization or assets")
 )
 
 var allowedVolcAssetActorDurations = map[int]struct{}{
@@ -219,6 +220,30 @@ func RevokeVolcAssetActor(userId, actorId int, now int64) error {
 		return ErrVolcAssetActorNotFound
 	}
 	return nil
+}
+
+func DeleteVolcAssetActor(userId, actorId int) error {
+	return DB.Transaction(func(tx *gorm.DB) error {
+		var actor VolcAssetActor
+		err := tx.Where("user_id = ? AND id = ?", userId, actorId).First(&actor).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrVolcAssetActorNotFound
+		}
+		if err != nil {
+			return err
+		}
+		var assetCount int64
+		if err := tx.Model(&VolcAssetActorAsset{}).Where("user_id = ? AND actor_id = ?", userId, actorId).Count(&assetCount).Error; err != nil {
+			return err
+		}
+		if actor.Status != VolcAssetActorPending || strings.TrimSpace(actor.GroupId) != "" || assetCount > 0 {
+			return ErrVolcAssetActorInUse
+		}
+		if err := tx.Where("user_id = ? AND actor_id = ?", userId, actorId).Delete(&VolcAssetAuthorizationSession{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&actor).Error
+	})
 }
 
 func SaveVolcAssetActorAsset(userId, actorId int, assetId string, now int64) error {

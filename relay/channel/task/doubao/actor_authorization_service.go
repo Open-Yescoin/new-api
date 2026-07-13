@@ -43,6 +43,11 @@ func NewActorAuthorizationService(api AssetAPI, config system_setting.VolcAssetS
 	return &ActorAuthorizationService{api: api, config: config, now: now}
 }
 
+func (s *ActorAuthorizationService) Configured() bool {
+	_, err := s.authorizationCallbackURL()
+	return err == nil
+}
+
 func (s *ActorAuthorizationService) CreateSession(ctx context.Context, userId, actorId int) (*ActorAuthorizationSession, error) {
 	actor, err := model.GetVolcAssetActorForUser(userId, actorId)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -129,8 +130,70 @@ func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycom
 	if err := validateSeedanceModelResolution(&req); err != nil {
 		return service.TaskErrorWrapper(err, "invalid_resolution", http.StatusBadRequest)
 	}
+	if err := validateSeedanceAssetReferences(c.GetInt("id"), req, time.Now().Unix()); err != nil {
+		code := "actor_authorization_required"
+		switch {
+		case errors.Is(err, model.ErrVolcAssetActorExpired):
+			code = "actor_authorization_expired"
+		case errors.Is(err, model.ErrVolcAssetActorRevoked):
+			code = "actor_authorization_revoked"
+		}
+		return service.TaskErrorWrapper(err, code, http.StatusConflict)
+	}
 	c.Set("task_request", req)
 	return nil
+}
+
+func validateSeedanceAssetReferences(userId int, req relaycommon.TaskSubmitReq, now int64) error {
+	assetIds := seedanceAssetReferenceIds(req.Metadata)
+	for _, assetId := range assetIds {
+		actor, err := model.FindVolcAssetActorByAsset(userId, assetId)
+		if err != nil {
+			return err
+		}
+		if _, err := model.RequireVolcAssetActorActiveAt(userId, actor.Id, now); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func seedanceAssetReferenceIds(metadata map[string]interface{}) []string {
+	if metadata == nil {
+		return nil
+	}
+	content, ok := metadata["content"].([]interface{})
+	if !ok {
+		return nil
+	}
+	seen := make(map[string]struct{})
+	assetIds := make([]string, 0)
+	for _, rawItem := range content {
+		item, ok := rawItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		for _, key := range []string{"image_url", "video_url"} {
+			media, ok := item[key].(map[string]interface{})
+			if !ok {
+				continue
+			}
+			urlValue, _ := media["url"].(string)
+			if !strings.HasPrefix(urlValue, "asset://") {
+				continue
+			}
+			assetId := strings.TrimSpace(strings.TrimPrefix(urlValue, "asset://"))
+			if assetId == "" {
+				continue
+			}
+			if _, exists := seen[assetId]; exists {
+				continue
+			}
+			seen[assetId] = struct{}{}
+			assetIds = append(assetIds, assetId)
+		}
+	}
+	return assetIds
 }
 
 // BuildRequestURL constructs the upstream URL.

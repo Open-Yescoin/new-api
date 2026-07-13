@@ -391,6 +391,32 @@ func SetApiRouter(router *gin.Engine) {
 }
 
 func registerSeedanceAssetRoutes(apiRouter *gin.RouterGroup) {
+	seedancePublic := apiRouter.Group("/seedance/public/authorization")
+	seedancePublic.Use(middleware.CriticalRateLimit())
+	{
+		seedancePublic.POST("/details", controller.GetSeedancePublicAuthorizationDetails)
+		seedancePublic.POST("/consent", controller.AcceptSeedancePublicAuthorizationConsent)
+		seedancePublic.POST("/revoke", controller.RevokeSeedancePublicAuthorization)
+	}
+
+	actors := apiRouter.Group("/seedance/actors")
+	actors.Use(middleware.UserAuth())
+	{
+		actors.GET("", controller.ListSeedanceActors)
+		actors.POST("", controller.CreateSeedanceActor)
+		actors.PATCH("/:actor_id", controller.RenameSeedanceActor)
+		actors.DELETE("/:actor_id", controller.DeleteSeedanceActor)
+		actors.GET("/:actor_id/authorization", controller.GetSeedanceActorAuthorization)
+		actors.POST("/:actor_id/authorization/session", controller.CreateSeedanceActorAuthorizationSession)
+		actors.POST("/:actor_id/authorization/result", controller.GetSeedanceActorAuthorizationResult)
+		actors.POST("/:actor_id/authorization/revoke", controller.RevokeSeedanceActor)
+		actors.GET("/:actor_id/assets", controller.ListSeedanceActorAssets)
+		actors.POST("/:actor_id/assets", controller.CreateSeedanceActorAsset)
+		actors.GET("/:actor_id/assets/:id", controller.GetSeedanceActorAsset)
+		actors.PATCH("/:actor_id/assets/:id", controller.UpdateSeedanceActorAsset)
+		actors.DELETE("/:actor_id/assets/:id", controller.DeleteSeedanceActorAsset)
+	}
+
 	seedance := apiRouter.Group("/seedance/assets")
 	seedance.Use(middleware.UserAuth())
 	{

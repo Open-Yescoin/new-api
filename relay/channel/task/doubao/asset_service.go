@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/system_setting"
@@ -140,10 +141,123 @@ type AssetService struct {
 	api    AssetAPI
 	groups AssetGroupRepository
 	config system_setting.VolcAssetSettings
+	now    func() time.Time
 }
 
 func NewAssetService(api AssetAPI, groups AssetGroupRepository, config system_setting.VolcAssetSettings) *AssetService {
-	return &AssetService{api: api, groups: groups, config: config}
+	return &AssetService{api: api, groups: groups, config: config, now: time.Now}
+}
+
+func (s *AssetService) ListActorAssets(ctx context.Context, userId, actorId int, request ListAssetsRequest) (*ListAssetsResponse, error) {
+	groupId, err := s.actorGroup(userId, actorId)
+	if err != nil {
+		return nil, err
+	}
+	if request.Filter == nil {
+		request.Filter = &AssetFilter{}
+	}
+	request.Filter.GroupIds = []string{groupId}
+	request.Filter.GroupType = s.config.GetGroupType()
+	request.ProjectName = s.config.GetProjectName()
+	var response ListAssetsResponse
+	if err := s.api.Call(ctx, "ListAssets", request, &response); err != nil {
+		return nil, err
+	}
+	items := make([]AssetItem, 0, len(response.Items))
+	for i := range response.Items {
+		if response.Items[i].GroupId != groupId {
+			continue
+		}
+		items = append(items, response.Items[i])
+		if err := model.SaveVolcAssetActorAsset(userId, actorId, response.Items[i].Id, s.now().Unix()); err != nil {
+			return nil, fmt.Errorf("save Seedance actor asset mapping: %w", err)
+		}
+	}
+	response.Items = items
+	response.TotalCount = int64(len(items))
+	return &response, nil
+}
+
+func (s *AssetService) CreateActorAsset(ctx context.Context, userId, actorId int, request CreateAssetRequest) (*CreateAssetResponse, error) {
+	if !isHTTPURL(request.URL) || (request.AssetType != "Image" && request.AssetType != "Video") {
+		return nil, ErrInvalidAssetRequest
+	}
+	actor, err := model.RequireVolcAssetActorActiveAt(userId, actorId, s.now().Unix())
+	if err != nil {
+		return nil, err
+	}
+	request.GroupId = actor.GroupId
+	request.ProjectName = s.config.GetProjectName()
+	var response CreateAssetResponse
+	if err := s.api.Call(ctx, "CreateAsset", request, &response); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(response.Id) == "" {
+		return nil, ErrAssetNotFound
+	}
+	if err := model.SaveVolcAssetActorAsset(userId, actorId, response.Id, s.now().Unix()); err != nil {
+		return nil, fmt.Errorf("save Seedance actor asset mapping: %w", err)
+	}
+	return &response, nil
+}
+
+func (s *AssetService) GetActorAsset(ctx context.Context, userId, actorId int, request GetAssetRequest) (*AssetItem, error) {
+	if strings.TrimSpace(request.Id) == "" {
+		return nil, fmt.Errorf("%w: Id is required", ErrInvalidAssetRequest)
+	}
+	groupId, err := s.actorGroup(userId, actorId)
+	if err != nil {
+		return nil, err
+	}
+	asset, err := s.getOwnedAsset(ctx, request.Id, groupId)
+	if err != nil {
+		return nil, err
+	}
+	if err := model.SaveVolcAssetActorAsset(userId, actorId, asset.Id, s.now().Unix()); err != nil {
+		return nil, fmt.Errorf("save Seedance actor asset mapping: %w", err)
+	}
+	return asset, nil
+}
+
+func (s *AssetService) UpdateActorAsset(ctx context.Context, userId, actorId int, request UpdateAssetRequest) error {
+	if strings.TrimSpace(request.Id) == "" || strings.TrimSpace(request.Name) == "" {
+		return fmt.Errorf("%w: Id and Name are required", ErrInvalidAssetRequest)
+	}
+	groupId, err := s.actorGroup(userId, actorId)
+	if err != nil {
+		return err
+	}
+	if _, err := s.getOwnedAsset(ctx, request.Id, groupId); err != nil {
+		return err
+	}
+	request.ProjectName = s.config.GetProjectName()
+	return s.api.Call(ctx, "UpdateAsset", request, &struct{}{})
+}
+
+func (s *AssetService) DeleteActorAsset(ctx context.Context, userId, actorId int, request DeleteAssetRequest) error {
+	if strings.TrimSpace(request.Id) == "" {
+		return fmt.Errorf("%w: Id is required", ErrInvalidAssetRequest)
+	}
+	groupId, err := s.actorGroup(userId, actorId)
+	if err != nil {
+		return err
+	}
+	if _, err := s.getOwnedAsset(ctx, request.Id, groupId); err != nil {
+		return err
+	}
+	request.ProjectName = s.config.GetProjectName()
+	return s.api.Call(ctx, "DeleteAsset", request, &struct{}{})
+}
+
+func (s *AssetService) actorGroup(userId, actorId int) (string, error) {
+	actor, err := model.GetVolcAssetActorForUser(userId, actorId)
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(actor.GroupId) == "" {
+		return "", model.ErrVolcAssetActorAuthorizationRequired
+	}
+	return actor.GroupId, nil
 }
 
 func (s *AssetService) CreateVisualValidateSession(ctx context.Context, userId int, request CreateVisualValidateSessionRequest) (*CreateVisualValidateSessionResponse, error) {

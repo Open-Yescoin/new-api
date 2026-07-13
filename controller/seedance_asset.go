@@ -246,6 +246,31 @@ func respondSeedanceAssetError(c *gin.Context, err error) {
 	message := "Seedance asset library request failed"
 
 	switch {
+	case errors.Is(err, model.ErrVolcAssetActorNotFound):
+		statusCode = http.StatusNotFound
+		code = "actor_not_found"
+		message = model.ErrVolcAssetActorNotFound.Error()
+	case errors.Is(err, model.ErrVolcAssetInvalidDuration):
+		statusCode = http.StatusBadRequest
+		code = "invalid_authorization_duration"
+		message = model.ErrVolcAssetInvalidDuration.Error()
+	case errors.Is(err, model.ErrVolcAssetActorInUse):
+		statusCode = http.StatusConflict
+		code = "actor_in_use"
+		message = model.ErrVolcAssetActorInUse.Error()
+	case errors.Is(err, model.ErrVolcAssetActorExpired):
+		statusCode = http.StatusConflict
+		code = "actor_authorization_expired"
+		message = model.ErrVolcAssetActorExpired.Error()
+	case errors.Is(err, model.ErrVolcAssetActorRevoked):
+		statusCode = http.StatusConflict
+		code = "actor_authorization_revoked"
+		message = model.ErrVolcAssetActorRevoked.Error()
+	case errors.Is(err, model.ErrVolcAssetActorAuthorizationRequired),
+		errors.Is(err, model.ErrVolcAssetConsentRequired):
+		statusCode = http.StatusConflict
+		code = "actor_authorization_required"
+		message = model.ErrVolcAssetActorAuthorizationRequired.Error()
 	case errors.Is(err, doubao.ErrInvalidAssetRequest),
 		errors.Is(err, model.ErrVolcAssetAuthorizationNotFound):
 		statusCode = http.StatusBadRequest
