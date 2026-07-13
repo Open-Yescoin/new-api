@@ -81,6 +81,22 @@ func TestStreamScannerHandler_NilInputs(t *testing.T) {
 	StreamScannerHandler(c, &http.Response{Body: io.NopCloser(strings.NewReader(""))}, info, nil)
 }
 
+func TestStreamScannerHandler_DefaultsNonPositiveTimeout(t *testing.T) {
+	oldTimeout := constant.StreamingTimeout
+	constant.StreamingTimeout = 0
+	t.Cleanup(func() { constant.StreamingTimeout = oldTimeout })
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	resp := &http.Response{Body: io.NopCloser(strings.NewReader("data: [DONE]\n"))}
+	info := &relaycommon.RelayInfo{ChannelMeta: &relaycommon.ChannelMeta{}}
+
+	require.NotPanics(t, func() {
+		StreamScannerHandler(c, resp, info, func(data string, sr *StreamResult) {})
+	})
+}
+
 func TestStreamScannerHandler_EmptyBody(t *testing.T) {
 	t.Parallel()
 
