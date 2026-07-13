@@ -110,9 +110,9 @@ func TestCreateAuthorizationSessionUsesConfiguredCallbackAndStoresDigest(t *test
 
 	require.NoError(t, err)
 	require.Equal(t, "raw-byted-token", result.BytedToken)
-	require.Equal(t, int64(400), result.ExpiresAt)
+	require.Equal(t, int64(1000), result.ExpiresAt)
 	require.Equal(t, 42, sessions.userId)
-	require.Equal(t, int64(400), sessions.expiresAt)
+	require.Equal(t, int64(1000), sessions.expiresAt)
 	require.NotEqual(t, result.BytedToken, sessions.tokenHash)
 	require.Equal(t, hex.EncodeToString(common.Sha256Raw([]byte(result.BytedToken))), sessions.tokenHash)
 	request := api.calls[0].request.(CreateVisualValidateSessionRequest)

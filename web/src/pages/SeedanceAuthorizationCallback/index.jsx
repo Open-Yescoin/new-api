@@ -1,8 +1,7 @@
 import React from 'react';
-import { Button, Card, Space, Typography } from '@douyinfe/semi-ui';
+import { Card, Space, Typography } from '@douyinfe/semi-ui';
 import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
 const { Paragraph, Title } = Typography;
 
@@ -21,14 +20,12 @@ const SeedanceAuthorizationCallback = () => {
           <Title heading={2}>{t('授权完成，请返回原设备。')}</Title>
           <Paragraph>
             {t(
-              '原设备会自动查询授权结果；如果您在本手机开始授权，也可以返回真人素材库。',
+              '手机端无需登录 Token123。原设备会自动查询授权结果并进入下一步。',
             )}
           </Paragraph>
-          <Link to='/console/seedance-assets'>
-            <Button type='primary' theme='solid'>
-              {t('返回真人素材库')}
-            </Button>
-          </Link>
+          <Paragraph type='tertiary'>
+            {t('请关闭本页面并返回原设备。')}
+          </Paragraph>
         </Space>
       </Card>
     </main>
