@@ -115,6 +115,10 @@ type AssetGroupRepository interface {
 
 type modelAssetGroupRepository struct{}
 
+func NewModelAssetGroupRepository() AssetGroupRepository {
+	return modelAssetGroupRepository{}
+}
+
 func (modelAssetGroupRepository) Get(userId int) (string, error) {
 	binding, err := model.GetVolcAssetUserGroup(userId)
 	if err != nil {

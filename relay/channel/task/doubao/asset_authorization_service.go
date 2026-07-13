@@ -49,6 +49,10 @@ type AssetAuthorizationRepository interface {
 
 type modelAssetAuthorizationRepository struct{}
 
+func NewModelAssetAuthorizationRepository() AssetAuthorizationRepository {
+	return modelAssetAuthorizationRepository{}
+}
+
 func (modelAssetAuthorizationRepository) Start(userId int, tokenHash string, expiresAt, now int64) error {
 	_, err := model.StartVolcAssetAuthorization(userId, tokenHash, expiresAt, now)
 	return err

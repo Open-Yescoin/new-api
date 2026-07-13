@@ -53,6 +53,7 @@ func SetApiRouter(router *gin.Engine) {
 
 		// Universal secure verification routes
 		apiRouter.POST("/verify", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.UniversalVerify)
+		registerSeedanceAssetRoutes(apiRouter)
 
 		affiliateRoute := apiRouter.Group("/affiliate")
 		affiliateRoute.Use(middleware.UserAuth())
@@ -386,5 +387,20 @@ func SetApiRouter(router *gin.Engine) {
 			deploymentsRoute.POST("/:id/extend", controller.ExtendDeployment)
 			deploymentsRoute.DELETE("/:id", controller.DeleteDeployment)
 		}
+	}
+}
+
+func registerSeedanceAssetRoutes(apiRouter *gin.RouterGroup) {
+	seedance := apiRouter.Group("/seedance/assets")
+	seedance.Use(middleware.UserAuth())
+	{
+		seedance.GET("/authorization", controller.GetSeedanceAuthorizationStatus)
+		seedance.POST("/authorization/session", controller.CreateSeedanceAuthorizationSession)
+		seedance.POST("/authorization/result", controller.GetSeedanceAuthorizationResult)
+		seedance.GET("/", controller.ListSeedanceAssets)
+		seedance.POST("/", controller.CreateSeedanceAsset)
+		seedance.GET("/:id", controller.GetSeedanceAsset)
+		seedance.PATCH("/:id", controller.UpdateSeedanceAsset)
+		seedance.DELETE("/:id", controller.DeleteSeedanceAsset)
 	}
 }
