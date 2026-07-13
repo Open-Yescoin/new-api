@@ -3725,6 +3725,12 @@
     "重新授权": "Autoriser à nouveau",
     "重新授权会替换当前真人绑定，原素材不会自动迁移。": "Une nouvelle autorisation remplace la personne actuellement liée ; les ressources existantes ne sont pas migrées automatiquement.",
     "重新生成授权链接": "Générer un nouveau lien d’autorisation",
-    "重要说明": "Informations importantes"
+    "重要说明": "Informations importantes",
+    "30 天授权": "Autorisation de 30 jours",
+    "60 天授权": "Autorisation de 60 jours",
+    "半年授权": "Autorisation de six mois",
+    "一年授权": "Autorisation d’un an",
+    "长期有效（演员可随时撤回）": "Longue durée (l’acteur peut révoquer à tout moment)",
+    "{{days}} 天授权": "Autorisation de {{days}} jours"
   }
 }

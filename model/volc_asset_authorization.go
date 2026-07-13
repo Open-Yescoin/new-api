@@ -22,13 +22,19 @@ var (
 )
 
 type VolcAssetAuthorizationSession struct {
-	Id        int    `json:"id" gorm:"primaryKey"`
-	UserId    int    `json:"user_id" gorm:"index;not null"`
-	TokenHash string `json:"-" gorm:"type:varchar(64);uniqueIndex;not null"`
-	Status    string `json:"status" gorm:"type:varchar(16);index;not null"`
-	ExpiresAt int64  `json:"expires_at" gorm:"bigint;index;not null"`
-	CreatedAt int64  `json:"created_at" gorm:"bigint;not null"`
-	UpdatedAt int64  `json:"updated_at" gorm:"bigint;not null"`
+	Id                  int    `json:"id" gorm:"primaryKey"`
+	UserId              int    `json:"user_id" gorm:"index;not null"`
+	ActorId             int    `json:"actor_id,omitempty" gorm:"index"`
+	TokenHash           string `json:"-" gorm:"type:varchar(64);uniqueIndex;not null"`
+	InvitationTokenHash string `json:"-" gorm:"type:varchar(64);index"`
+	RevocationTokenHash string `json:"-" gorm:"type:varchar(64);index"`
+	DurationDays        *int   `json:"duration_days,omitempty"`
+	ConsentVersion      string `json:"consent_version,omitempty" gorm:"type:varchar(32)"`
+	ConsentAcceptedAt   *int64 `json:"consent_accepted_at,omitempty" gorm:"type:bigint"`
+	Status              string `json:"status" gorm:"type:varchar(16);index;not null"`
+	ExpiresAt           int64  `json:"expires_at" gorm:"bigint;index;not null"`
+	CreatedAt           int64  `json:"created_at" gorm:"bigint;not null"`
+	UpdatedAt           int64  `json:"updated_at" gorm:"bigint;not null"`
 }
 
 func ExpireVolcAssetAuthorization(userId int, tokenHash string, now int64) error {

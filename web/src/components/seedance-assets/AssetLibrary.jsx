@@ -1,3 +1,21 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Banner,
@@ -23,12 +41,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { copy, showError, showSuccess } from '../../helpers';
 import { seedanceAssetsApi } from '../../services/seedanceAssets';
+import { actorAuthorizationState } from './state';
 
 const { Paragraph, Text } = Typography;
 const normalizedStatus = (asset) =>
   String(asset.Status || asset.UpstreamStatus || '').toLowerCase();
 
-const AssetLibrary = ({ onReauthorize }) => {
+const AssetLibrary = ({ actor, onReauthorize }) => {
   const { t } = useTranslation();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +57,18 @@ const AssetLibrary = ({ onReauthorize }) => {
   const [renameAsset, setRenameAsset] = useState(null);
   const [renameValue, setRenameValue] = useState('');
   const [renaming, setRenaming] = useState(false);
+  const actorState = actorAuthorizationState(
+    actor,
+    Math.floor(Date.now() / 1000),
+  );
+  const canUseAssets = actorState === 'active' || actorState === 'expiring';
 
   const loadAssets = useCallback(
     async ({ silent = false } = {}) => {
       if (!silent) setLoading(true);
       try {
-        const response = await seedanceAssetsApi.list({
+        if (!actor?.id) return;
+        const response = await seedanceAssetsApi.listActorAssets(actor.id, {
           page_number: 1,
           page_size: 100,
         });
@@ -54,7 +79,7 @@ const AssetLibrary = ({ onReauthorize }) => {
         if (!silent) setLoading(false);
       }
     },
-    [t],
+    [actor?.id, t],
   );
 
   useEffect(() => {
@@ -95,7 +120,7 @@ const AssetLibrary = ({ onReauthorize }) => {
     }
     setCreating(true);
     try {
-      await seedanceAssetsApi.create({
+      await seedanceAssetsApi.createActorAsset(actor.id, {
         url: parsed.toString(),
         asset_type: assetType,
       });
@@ -135,7 +160,7 @@ const AssetLibrary = ({ onReauthorize }) => {
     }
     setRenaming(true);
     try {
-      await seedanceAssetsApi.update(renameAsset.Id, name);
+      await seedanceAssetsApi.updateActorAsset(actor.id, renameAsset.Id, name);
       setRenameAsset(null);
       showSuccess(t('素材名称已更新'));
       await loadAssets({ silent: true });
@@ -155,7 +180,7 @@ const AssetLibrary = ({ onReauthorize }) => {
       cancelText: t('取消'),
       onOk: async () => {
         try {
-          await seedanceAssetsApi.remove(asset.Id);
+          await seedanceAssetsApi.removeActorAsset(actor.id, asset.Id);
           showSuccess(t('素材已删除'));
           await loadAssets({ silent: true });
         } catch (error) {
@@ -211,7 +236,7 @@ const AssetLibrary = ({ onReauthorize }) => {
       title: t('操作'),
       render: (_value, asset) => (
         <Space wrap>
-          {normalizedStatus(asset) === 'active' && (
+          {canUseAssets && normalizedStatus(asset) === 'active' && (
             <Button
               size='small'
               icon={<Copy size={14} />}
@@ -243,6 +268,15 @@ const AssetLibrary = ({ onReauthorize }) => {
   return (
     <Space vertical spacing='medium' className='w-full'>
       <Card title={t('登记真人素材')}>
+        {!canUseAssets && (
+          <Banner
+            type='warning'
+            className='mb-3'
+            description={t(
+              '该演员授权已过期、撤回或尚未完成；可以查看和清理旧素材，但不能登记或调用素材。',
+            )}
+          />
+        )}
         <Banner
           type='info'
           description={t(
@@ -256,6 +290,7 @@ const AssetLibrary = ({ onReauthorize }) => {
               className='mt-2'
               value={url}
               onChange={setUrl}
+              disabled={!canUseAssets}
               placeholder='https://example.com/person.jpg'
               aria-label={t('素材地址')}
             />
@@ -266,6 +301,7 @@ const AssetLibrary = ({ onReauthorize }) => {
               className='mt-2 w-full'
               value={assetType}
               onChange={setAssetType}
+              disabled={!canUseAssets}
               aria-label={t('素材类型')}
               optionList={[
                 { label: t('图片'), value: 'Image' },
@@ -278,6 +314,7 @@ const AssetLibrary = ({ onReauthorize }) => {
             type='primary'
             theme='solid'
             loading={creating}
+            disabled={!canUseAssets}
             onClick={createAsset}
           >
             {t('登记素材')}
@@ -292,7 +329,7 @@ const AssetLibrary = ({ onReauthorize }) => {
             <Button icon={<RefreshCw size={15} />} onClick={() => loadAssets()}>
               {t('刷新')}
             </Button>
-            <Button type='warning' onClick={onReauthorize}>
+            <Button type='warning' onClick={() => onReauthorize(actor)}>
               {t('重新授权')}
             </Button>
           </Space>
@@ -300,7 +337,9 @@ const AssetLibrary = ({ onReauthorize }) => {
       >
         <Banner
           type='warning'
-          description={t('重新授权会替换当前真人绑定，原素材不会自动迁移。')}
+          description={t(
+            '重新授权仅影响当前演员；若上游创建新素材组，原素材不会自动迁移。',
+          )}
           className='mb-4'
         />
         <Table

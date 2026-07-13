@@ -4259,6 +4259,12 @@
     "重新授权": "Ủy quyền lại",
     "重新授权会替换当前真人绑定，原素材不会自动迁移。": "Ủy quyền lại sẽ thay thế liên kết người hiện tại; tư liệu cũ không tự động được chuyển.",
     "重新生成授权链接": "Tạo lại liên kết ủy quyền",
-    "重要说明": "Thông tin quan trọng"
+    "重要说明": "Thông tin quan trọng",
+    "30 天授权": "Ủy quyền 30 ngày",
+    "60 天授权": "Ủy quyền 60 ngày",
+    "半年授权": "Ủy quyền sáu tháng",
+    "一年授权": "Ủy quyền một năm",
+    "长期有效（演员可随时撤回）": "Dài hạn (diễn viên có thể thu hồi bất kỳ lúc nào)",
+    "{{days}} 天授权": "Ủy quyền {{days}} ngày"
   }
 }
