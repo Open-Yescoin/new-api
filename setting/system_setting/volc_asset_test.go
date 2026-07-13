@@ -56,3 +56,38 @@ func TestPublicVolcAssetSettingsRedactsSecret(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, strings.Contains(string(encoded), "must-not-leak"))
 }
+
+func TestVolcAssetSettingsAuthorizationCallbackURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "production origin",
+			baseURL: "https://www.token123.co",
+			want:    "https://www.token123.co/seedance/authorization/callback",
+		},
+		{
+			name:    "trailing slash",
+			baseURL: "https://www.token123.co/",
+			want:    "https://www.token123.co/seedance/authorization/callback",
+		},
+		{name: "http is rejected", baseURL: "http://www.token123.co", wantErr: true},
+		{name: "path is rejected", baseURL: "https://www.token123.co/app", wantErr: true},
+		{name: "query is rejected", baseURL: "https://www.token123.co?next=bad", wantErr: true},
+		{name: "credentials are rejected", baseURL: "https://user@example.com", wantErr: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := VolcAssetSettings{AuthorizationCallbackBaseURL: test.baseURL}
+
+			got, err := cfg.GetAuthorizationCallbackURL()
+
+			require.Equal(t, test.wantErr, err != nil)
+			require.Equal(t, test.want, got)
+		})
+	}
+}

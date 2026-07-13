@@ -38,6 +38,7 @@ const DEFAULT_VALUES = {
   region: 'ap-southeast-1',
   project_name: 'default',
   group_type: 'LivenessFace',
+  authorization_callback_base_url: '',
 };
 
 const VolcAssetSetting = () => {
@@ -87,6 +88,8 @@ const VolcAssetSetting = () => {
         region: values.region.trim(),
         project_name: values.project_name.trim(),
         group_type: 'LivenessFace',
+        authorization_callback_base_url:
+          values.authorization_callback_base_url.trim(),
       };
       const response = await API.put('/api/option/', {
         key: OPTION_KEY,
@@ -149,6 +152,15 @@ const VolcAssetSetting = () => {
             field='project_name'
             label={t('BytePlus 项目名称')}
             rules={[{ required: true, message: t('请输入 BytePlus 项目名称') }]}
+          />
+          <Form.Input
+            field='authorization_callback_base_url'
+            label={t('真人授权回调站点')}
+            placeholder='https://www.token123.co'
+            extraText={t(
+              '请输入正式用户前端的 HTTPS 站点，例如 https://www.token123.co；不要填写 API 域名。',
+            )}
+            rules={[{ required: true, message: t('请输入真人授权回调站点') }]}
           />
           <Form.Input field='group_type' label={t('素材组类型')} disabled />
           <Text type='tertiary'>
