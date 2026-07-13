@@ -28,15 +28,19 @@ func GetVolcAssetUserGroup(userId int) (*VolcAssetUserGroup, error) {
 }
 
 func SaveVolcAssetUserGroup(userId int, groupId string) error {
+	return saveVolcAssetUserGroup(DB, userId, groupId)
+}
+
+func saveVolcAssetUserGroup(tx *gorm.DB, userId int, groupId string) error {
 	if userId <= 0 || groupId == "" {
 		return fmt.Errorf("invalid Volcengine asset user group binding")
 	}
 
 	now := common.GetTimestamp()
 	var existing VolcAssetUserGroup
-	err := DB.Where("user_id = ?", userId).First(&existing).Error
+	err := tx.Where("user_id = ?", userId).First(&existing).Error
 	if err == nil {
-		return DB.Model(&existing).Updates(map[string]any{
+		return tx.Model(&existing).Updates(map[string]any{
 			"group_id":   groupId,
 			"updated_at": now,
 		}).Error
@@ -51,10 +55,14 @@ func SaveVolcAssetUserGroup(userId int, groupId string) error {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	if err := DB.Create(&created).Error; err != nil {
+	if err := tx.Create(&created).Error; err != nil {
 		// Another request may have created the unique user binding first.
-		if _, readErr := GetVolcAssetUserGroup(userId); readErr == nil {
-			return nil
+		var concurrent VolcAssetUserGroup
+		if readErr := tx.Where("user_id = ?", userId).First(&concurrent).Error; readErr == nil {
+			return tx.Model(&concurrent).Updates(map[string]any{
+				"group_id":   groupId,
+				"updated_at": now,
+			}).Error
 		}
 		return err
 	}
