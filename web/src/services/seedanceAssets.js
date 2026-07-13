@@ -27,7 +27,7 @@ export const seedanceAssetsApi = {
   createActor: (payload) =>
     API.post('/api/seedance/actors', payload, { skipErrorHandler: true }),
   renameActor: (actorId, displayName) =>
-    API.patch(
+    API.put(
       `/api/seedance/actors/${encodeURIComponent(actorId)}`,
       { display_name: displayName },
       { skipErrorHandler: true },
@@ -71,7 +71,7 @@ export const seedanceAssetsApi = {
       { skipErrorHandler: true },
     ),
   updateActorAsset: (actorId, assetId, name) =>
-    API.patch(
+    API.put(
       `/api/seedance/actors/${encodeURIComponent(actorId)}/assets/${encodeURIComponent(assetId)}`,
       { name },
       { skipErrorHandler: true },
@@ -127,7 +127,7 @@ export const seedanceAssetsApi = {
       skipErrorHandler: true,
     }),
   update: (id, name) =>
-    API.patch(
+    API.put(
       `/api/seedance/assets/${encodeURIComponent(id)}`,
       { name },
       { skipErrorHandler: true },

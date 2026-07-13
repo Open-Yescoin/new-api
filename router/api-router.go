@@ -404,6 +404,7 @@ func registerSeedanceAssetRoutes(apiRouter *gin.RouterGroup) {
 	{
 		actors.GET("", controller.ListSeedanceActors)
 		actors.POST("", controller.CreateSeedanceActor)
+		actors.PUT("/:actor_id", controller.RenameSeedanceActor)
 		actors.PATCH("/:actor_id", controller.RenameSeedanceActor)
 		actors.DELETE("/:actor_id", controller.DeleteSeedanceActor)
 		actors.GET("/:actor_id/authorization", controller.GetSeedanceActorAuthorization)
@@ -413,6 +414,7 @@ func registerSeedanceAssetRoutes(apiRouter *gin.RouterGroup) {
 		actors.GET("/:actor_id/assets", controller.ListSeedanceActorAssets)
 		actors.POST("/:actor_id/assets", controller.CreateSeedanceActorAsset)
 		actors.GET("/:actor_id/assets/:id", controller.GetSeedanceActorAsset)
+		actors.PUT("/:actor_id/assets/:id", controller.UpdateSeedanceActorAsset)
 		actors.PATCH("/:actor_id/assets/:id", controller.UpdateSeedanceActorAsset)
 		actors.DELETE("/:actor_id/assets/:id", controller.DeleteSeedanceActorAsset)
 	}
@@ -426,6 +428,7 @@ func registerSeedanceAssetRoutes(apiRouter *gin.RouterGroup) {
 		seedance.GET("", controller.ListSeedanceAssets)
 		seedance.POST("", controller.CreateSeedanceAsset)
 		seedance.GET("/:id", controller.GetSeedanceAsset)
+		seedance.PUT("/:id", controller.UpdateSeedanceAsset)
 		seedance.PATCH("/:id", controller.UpdateSeedanceAsset)
 		seedance.DELETE("/:id", controller.DeleteSeedanceAsset)
 	}

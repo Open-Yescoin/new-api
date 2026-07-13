@@ -25,6 +25,7 @@ func TestSeedanceDashboardRoutesRequireUserAuth(t *testing.T) {
 		"GET /api/seedance/assets":                        false,
 		"POST /api/seedance/assets":                       false,
 		"GET /api/seedance/assets/:id":                    false,
+		"PUT /api/seedance/assets/:id":                    false,
 		"PATCH /api/seedance/assets/:id":                  false,
 		"DELETE /api/seedance/assets/:id":                 false,
 	}
@@ -56,6 +57,7 @@ func TestSeedanceActorAndPublicAuthorizationRoutes(t *testing.T) {
 	authenticated := []string{
 		"GET /api/seedance/actors",
 		"POST /api/seedance/actors",
+		"PUT /api/seedance/actors/:actor_id",
 		"PATCH /api/seedance/actors/:actor_id",
 		"DELETE /api/seedance/actors/:actor_id",
 		"GET /api/seedance/actors/:actor_id/authorization",
@@ -65,6 +67,7 @@ func TestSeedanceActorAndPublicAuthorizationRoutes(t *testing.T) {
 		"GET /api/seedance/actors/:actor_id/assets",
 		"POST /api/seedance/actors/:actor_id/assets",
 		"GET /api/seedance/actors/:actor_id/assets/:id",
+		"PUT /api/seedance/actors/:actor_id/assets/:id",
 		"PATCH /api/seedance/actors/:actor_id/assets/:id",
 		"DELETE /api/seedance/actors/:actor_id/assets/:id",
 	}
