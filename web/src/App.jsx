@@ -52,6 +52,8 @@ import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
 import SeedanceAssets from './pages/SeedanceAssets';
 import SeedanceAuthorizationCallback from './pages/SeedanceAuthorizationCallback';
+import SeedanceAuthorizationConsent from './pages/SeedanceAuthorizationConsent';
+import SeedanceAuthorizationRevoke from './pages/SeedanceAuthorizationRevoke';
 
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -109,6 +111,14 @@ function App() {
           }
         />
         <Route path='/forbidden' element={<Forbidden />} />
+        <Route
+          path='/seedance/authorization/consent'
+          element={<SeedanceAuthorizationConsent />}
+        />
+        <Route
+          path='/seedance/authorization/revoke'
+          element={<SeedanceAuthorizationRevoke />}
+        />
         <Route
           path='/seedance/authorization/callback'
           element={<SeedanceAuthorizationCallback />}
