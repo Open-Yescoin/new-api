@@ -282,9 +282,14 @@ func migrateDB() error {
 		&CustomOAuthProvider{},
 		&UserOAuthBinding{},
 		&VolcAssetUserGroup{},
+		&VolcAssetActor{},
+		&VolcAssetActorAsset{},
 		&VolcAssetAuthorizationSession{},
 	)
 	if err != nil {
+		return err
+	}
+	if err := MigrateVolcAssetUserGroupsToActors(); err != nil {
 		return err
 	}
 	if common.UsingSQLite {
@@ -332,6 +337,8 @@ func migrateDBFast() error {
 		{&CustomOAuthProvider{}, "CustomOAuthProvider"},
 		{&UserOAuthBinding{}, "UserOAuthBinding"},
 		{&VolcAssetUserGroup{}, "VolcAssetUserGroup"},
+		{&VolcAssetActor{}, "VolcAssetActor"},
+		{&VolcAssetActorAsset{}, "VolcAssetActorAsset"},
 		{&VolcAssetAuthorizationSession{}, "VolcAssetAuthorizationSession"},
 	}
 	// 动态计算migration数量，确保errChan缓冲区足够大
@@ -356,6 +363,9 @@ func migrateDBFast() error {
 		if err != nil {
 			return err
 		}
+	}
+	if err := MigrateVolcAssetUserGroupsToActors(); err != nil {
+		return err
 	}
 	if common.UsingSQLite {
 		if err := ensureSubscriptionPlanTableSQLite(); err != nil {
