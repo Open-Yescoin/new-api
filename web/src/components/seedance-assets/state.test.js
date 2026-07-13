@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   AUTH_STATE,
   authorizationStateFromStatus,
+  authorizationStateFromPollError,
   shouldContinueAuthorizationPolling,
 } from './state';
 
@@ -31,5 +32,14 @@ describe('Seedance authorization state', () => {
     expect(
       shouldContinueAuthorizationPolling(AUTH_STATE.AUTHORIZED, 1000),
     ).toBe(false);
+  });
+
+  test('temporary polling failures preserve the current session', () => {
+    expect(authorizationStateFromPollError(503, 'asset_upstream_error')).toBe(
+      AUTH_STATE.WAITING,
+    );
+    expect(
+      authorizationStateFromPollError(410, 'authorization_expired'),
+    ).toBe(AUTH_STATE.EXPIRED);
   });
 });

@@ -140,6 +140,13 @@ const AuthorizationCard = ({
                 '请使用有摄像头的手机扫码完成授权；原设备会自动等待结果。',
               )}
             />
+            {errorMessage && (
+              <Banner
+                className='mt-3'
+                type='warning'
+                description={errorMessage}
+              />
+            )}
             {h5Link ? (
               <div className='mt-4 flex flex-col items-center gap-4 md:items-start'>
                 {!isMobile && (

@@ -28,3 +28,10 @@ export function authorizationStateFromStatus(status) {
 export function shouldContinueAuthorizationPolling(state, elapsedMs) {
   return state === AUTH_STATE.WAITING && elapsedMs < 300000;
 }
+
+export function authorizationStateFromPollError(status, errorCode) {
+  if (status === 410 || errorCode === 'authorization_expired') {
+    return AUTH_STATE.EXPIRED;
+  }
+  return AUTH_STATE.WAITING;
+}

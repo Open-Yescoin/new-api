@@ -5,6 +5,7 @@ import AuthorizationCard from '../../components/seedance-assets/AuthorizationCar
 import AssetLibrary from '../../components/seedance-assets/AssetLibrary';
 import {
   AUTH_STATE,
+  authorizationStateFromPollError,
   authorizationStateFromStatus,
   shouldContinueAuthorizationPolling,
 } from '../../components/seedance-assets/state';
@@ -110,18 +111,21 @@ const SeedanceAssets = () => {
         if (result?.authorized) {
           clearAuthorizationSession();
           setAuthorizationState(AUTH_STATE.AUTHORIZED);
+        } else {
+          setErrorMessage('');
         }
       } catch (error) {
-        if (
-          error.response?.status === 410 ||
-          responseErrorCode(error) === 'authorization_expired'
-        ) {
+        const nextState = authorizationStateFromPollError(
+          error.response?.status,
+          responseErrorCode(error),
+        );
+        if (nextState === AUTH_STATE.EXPIRED) {
           clearAuthorizationSession();
           setErrorMessage(t('授权链接已过期，请重新生成。'));
           setAuthorizationState(AUTH_STATE.EXPIRED);
         } else {
           setErrorMessage(t('授权查询失败，请重试。'));
-          setAuthorizationState(AUTH_STATE.FAILED);
+          setAuthorizationState(AUTH_STATE.WAITING);
         }
       } finally {
         pollInFlightRef.current = false;
