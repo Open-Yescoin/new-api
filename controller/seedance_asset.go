@@ -34,6 +34,24 @@ type seedanceAssetController struct {
 	assets        seedanceAssetService
 }
 
+type seedanceAssetItemResponse struct {
+	Id             string `json:"Id"`
+	Name           string `json:"Name,omitempty"`
+	URL            string `json:"URL,omitempty"`
+	AssetType      string `json:"AssetType,omitempty"`
+	Status         string `json:"Status,omitempty"`
+	UpstreamStatus string `json:"UpstreamStatus,omitempty"`
+	CreateTime     string `json:"CreateTime,omitempty"`
+	UpdateTime     string `json:"UpdateTime,omitempty"`
+}
+
+type seedanceAssetListResponse struct {
+	Items      []seedanceAssetItemResponse `json:"Items"`
+	TotalCount int64                       `json:"TotalCount"`
+	PageNumber int64                       `json:"PageNumber"`
+	PageSize   int64                       `json:"PageSize"`
+}
+
 func newSeedanceAssetController(authorization seedanceAuthorizationService, assets seedanceAssetService) *seedanceAssetController {
 	return &seedanceAssetController{authorization: authorization, assets: assets}
 }
@@ -87,7 +105,7 @@ func (h *seedanceAssetController) ListAssets(c *gin.Context) {
 		respondSeedanceAssetError(c, err)
 		return
 	}
-	respondSeedanceAssetSuccess(c, response)
+	respondSeedanceAssetSuccess(c, newSeedanceAssetListResponse(response))
 }
 
 func (h *seedanceAssetController) CreateAsset(c *gin.Context) {
@@ -117,7 +135,7 @@ func (h *seedanceAssetController) GetAsset(c *gin.Context) {
 		respondSeedanceAssetError(c, err)
 		return
 	}
-	respondSeedanceAssetSuccess(c, response)
+	respondSeedanceAssetSuccess(c, newSeedanceAssetItemResponse(response))
 }
 
 func (h *seedanceAssetController) UpdateAsset(c *gin.Context) {
@@ -194,6 +212,32 @@ func decodeSeedanceAssetRequest(c *gin.Context, target any) bool {
 
 func respondSeedanceAssetSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": data})
+}
+
+func newSeedanceAssetListResponse(response *doubao.ListAssetsResponse) seedanceAssetListResponse {
+	result := seedanceAssetListResponse{
+		Items:      make([]seedanceAssetItemResponse, 0, len(response.Items)),
+		TotalCount: response.TotalCount,
+		PageNumber: response.PageNumber,
+		PageSize:   response.PageSize,
+	}
+	for i := range response.Items {
+		result.Items = append(result.Items, newSeedanceAssetItemResponse(&response.Items[i]))
+	}
+	return result
+}
+
+func newSeedanceAssetItemResponse(item *doubao.AssetItem) seedanceAssetItemResponse {
+	return seedanceAssetItemResponse{
+		Id:             item.Id,
+		Name:           item.Name,
+		URL:            item.URL,
+		AssetType:      item.AssetType,
+		Status:         item.Status,
+		UpstreamStatus: item.UpstreamStatus,
+		CreateTime:     item.CreateTime,
+		UpdateTime:     item.UpdateTime,
+	}
 }
 
 func respondSeedanceAssetError(c *gin.Context, err error) {

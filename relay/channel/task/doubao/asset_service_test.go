@@ -39,15 +39,16 @@ func (f *fakeAssetAPI) Call(_ context.Context, action string, request any, resul
 }
 
 type fakeAssetGroupRepository struct {
-	groups map[int]string
+	groups    map[int]string
+	updatedAt map[int]int64
 }
 
-func (f *fakeAssetGroupRepository) Get(userId int) (string, error) {
+func (f *fakeAssetGroupRepository) Get(userId int) (AssetGroupBinding, error) {
 	groupId, ok := f.groups[userId]
 	if !ok {
-		return "", gorm.ErrRecordNotFound
+		return AssetGroupBinding{}, gorm.ErrRecordNotFound
 	}
-	return groupId, nil
+	return AssetGroupBinding{GroupId: groupId, UpdatedAt: f.updatedAt[userId]}, nil
 }
 
 func (f *fakeAssetGroupRepository) Save(userId int, groupId string) error {
@@ -57,7 +58,7 @@ func (f *fakeAssetGroupRepository) Save(userId int, groupId string) error {
 
 func newAssetServiceTestFixture() (*AssetService, *fakeAssetAPI, *fakeAssetGroupRepository) {
 	api := &fakeAssetAPI{responses: map[string]any{}, errors: map[string]error{}}
-	groups := &fakeAssetGroupRepository{groups: map[int]string{}}
+	groups := &fakeAssetGroupRepository{groups: map[int]string{}, updatedAt: map[int]int64{}}
 	cfg := system_setting.VolcAssetSettings{ProjectName: "project-a", GroupType: "LivenessFace"}
 	return NewAssetService(api, groups, cfg), api, groups
 }

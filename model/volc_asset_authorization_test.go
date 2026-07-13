@@ -116,6 +116,18 @@ func TestCompleteVolcAssetAuthorizationBindsGroupAndConsumesSession(t *testing.T
 	require.Equal(t, VolcAssetAuthorizationCompleted, stored.Status)
 }
 
+func TestSaveVolcAssetUserGroupUpsertsExistingBinding(t *testing.T) {
+	setupVolcAssetAuthorizationTestDB(t)
+	require.NoError(t, SaveVolcAssetUserGroup(42, "group-first"))
+
+	require.NoError(t, SaveVolcAssetUserGroup(42, "group-second"))
+
+	var bindings []VolcAssetUserGroup
+	require.NoError(t, DB.Where("user_id = ?", 42).Find(&bindings).Error)
+	require.Len(t, bindings, 1)
+	require.Equal(t, "group-second", bindings[0].GroupId)
+}
+
 func TestCompleteVolcAssetAuthorizationIsIdempotentForSameBinding(t *testing.T) {
 	setupVolcAssetAuthorizationTestDB(t)
 	digest := authorizationDigest("raw-byted-token")

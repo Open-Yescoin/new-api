@@ -181,11 +181,9 @@ const AssetLibrary = ({ onReauthorize }) => {
           <Tag color='red' prefixIcon={<CircleX size={14} />}>
             {t('处理失败')}
           </Tag>
-          {asset.Error?.Message && (
-            <Paragraph type='tertiary' size='small' className='mt-1'>
-              {asset.Error.Message}
-            </Paragraph>
-          )}
+          <Paragraph type='tertiary' size='small' className='mt-1'>
+            {t('素材提交失败，请检查地址和素材内容。')}
+          </Paragraph>
         </div>
       );
     }

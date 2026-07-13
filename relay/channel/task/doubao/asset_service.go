@@ -109,8 +109,13 @@ type DeleteAssetRequest struct {
 }
 
 type AssetGroupRepository interface {
-	Get(userId int) (string, error)
+	Get(userId int) (AssetGroupBinding, error)
 	Save(userId int, groupId string) error
+}
+
+type AssetGroupBinding struct {
+	GroupId   string
+	UpdatedAt int64
 }
 
 type modelAssetGroupRepository struct{}
@@ -119,12 +124,12 @@ func NewModelAssetGroupRepository() AssetGroupRepository {
 	return modelAssetGroupRepository{}
 }
 
-func (modelAssetGroupRepository) Get(userId int) (string, error) {
+func (modelAssetGroupRepository) Get(userId int) (AssetGroupBinding, error) {
 	binding, err := model.GetVolcAssetUserGroup(userId)
 	if err != nil {
-		return "", err
+		return AssetGroupBinding{}, err
 	}
-	return binding.GroupId, nil
+	return AssetGroupBinding{GroupId: binding.GroupId, UpdatedAt: binding.UpdatedAt}, nil
 }
 
 func (modelAssetGroupRepository) Save(userId int, groupId string) error {
@@ -260,17 +265,17 @@ func (s *AssetService) authorizedGroup(userId int) (string, error) {
 	if userId <= 0 {
 		return "", fmt.Errorf("%w: invalid user", ErrInvalidAssetRequest)
 	}
-	groupId, err := s.groups.Get(userId)
+	binding, err := s.groups.Get(userId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", ErrAssetGroupNotAuthorized
 	}
 	if err != nil {
 		return "", fmt.Errorf("load verified asset group: %w", err)
 	}
-	if groupId == "" {
+	if binding.GroupId == "" {
 		return "", ErrAssetGroupNotAuthorized
 	}
-	return groupId, nil
+	return binding.GroupId, nil
 }
 
 func (s *AssetService) getOwnedAsset(ctx context.Context, assetId, groupId string) (*AssetItem, error) {
@@ -291,4 +296,9 @@ func isHTTPURL(raw string) bool {
 		return false
 	}
 	return parsed.Scheme == "http" || parsed.Scheme == "https"
+}
+
+func isHTTPSURL(raw string) bool {
+	parsed, err := url.ParseRequestURI(raw)
+	return err == nil && parsed.Host != "" && parsed.Scheme == "https"
 }

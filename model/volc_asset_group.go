@@ -1,11 +1,11 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/QuantumNous/new-api/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type VolcAssetUserGroup struct {
@@ -37,34 +37,17 @@ func saveVolcAssetUserGroup(tx *gorm.DB, userId int, groupId string) error {
 	}
 
 	now := common.GetTimestamp()
-	var existing VolcAssetUserGroup
-	err := tx.Where("user_id = ?", userId).First(&existing).Error
-	if err == nil {
-		return tx.Model(&existing).Updates(map[string]any{
-			"group_id":   groupId,
-			"updated_at": now,
-		}).Error
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
 	created := VolcAssetUserGroup{
 		UserId:    userId,
 		GroupId:   groupId,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	if err := tx.Create(&created).Error; err != nil {
-		// Another request may have created the unique user binding first.
-		var concurrent VolcAssetUserGroup
-		if readErr := tx.Where("user_id = ?", userId).First(&concurrent).Error; readErr == nil {
-			return tx.Model(&concurrent).Updates(map[string]any{
-				"group_id":   groupId,
-				"updated_at": now,
-			}).Error
-		}
-		return err
-	}
-	return nil
+	return tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"group_id":   groupId,
+			"updated_at": now,
+		}),
+	}).Create(&created).Error
 }

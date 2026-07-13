@@ -161,3 +161,41 @@ func TestSeedanceAssetNotOwnedReturns404(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, recorder.Code)
 	require.Contains(t, recorder.Body.String(), "asset_not_found")
 }
+
+func TestSeedanceAssetListRedactsGroupID(t *testing.T) {
+	assets := &fakeSeedanceAssetService{listResponse: &doubao.ListAssetsResponse{
+		Items: []doubao.AssetItem{{
+			Id:          "asset-1",
+			GroupId:     "group-secret-42",
+			ProjectName: "internal-project",
+			Error:       doubao.AssetError{Message: "upstream-sensitive-detail"},
+		}},
+	}}
+	controller := newSeedanceAssetController(&fakeSeedanceAuthorizationService{}, assets)
+
+	recorder := performSeedanceControllerRequest(t, http.MethodGet, "/", "", controller.ListAssets)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.NotContains(t, strings.ToLower(recorder.Body.String()), "group")
+	require.NotContains(t, recorder.Body.String(), "internal-project")
+	require.NotContains(t, recorder.Body.String(), "upstream-sensitive-detail")
+	require.Contains(t, recorder.Body.String(), "asset-1")
+}
+
+func TestSeedanceAssetGetRedactsGroupID(t *testing.T) {
+	assets := &fakeSeedanceAssetService{assetResponse: &doubao.AssetItem{
+		Id:          "asset-1",
+		GroupId:     "group-secret-42",
+		ProjectName: "internal-project",
+		Error:       doubao.AssetError{Message: "upstream-sensitive-detail"},
+	}}
+	controller := newSeedanceAssetController(&fakeSeedanceAuthorizationService{}, assets)
+
+	recorder := performSeedanceControllerRequest(t, http.MethodGet, "/asset-1", "", controller.GetAsset)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.NotContains(t, strings.ToLower(recorder.Body.String()), "group")
+	require.NotContains(t, recorder.Body.String(), "internal-project")
+	require.NotContains(t, recorder.Body.String(), "upstream-sensitive-detail")
+	require.Contains(t, recorder.Body.String(), "asset-1")
+}

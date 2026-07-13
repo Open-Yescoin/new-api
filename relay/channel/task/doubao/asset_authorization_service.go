@@ -107,9 +107,10 @@ func (s *AuthorizationService) Status(userId int) (*AuthorizationStatus, error) 
 		return nil, fmt.Errorf("%w: invalid user", ErrInvalidAssetRequest)
 	}
 	status := &AuthorizationStatus{Configured: s.configured()}
-	groupId, err := s.groups.Get(userId)
+	binding, err := s.groups.Get(userId)
 	if err == nil {
-		status.Authorized = strings.TrimSpace(groupId) != ""
+		status.Authorized = strings.TrimSpace(binding.GroupId) != ""
+		status.UpdatedAt = binding.UpdatedAt
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("load verified asset group: %w", err)
 	}
@@ -139,7 +140,7 @@ func (s *AuthorizationService) CreateSession(ctx context.Context, userId int) (*
 	}
 	rawToken := strings.TrimSpace(upstream.BytedToken)
 	h5Link := strings.TrimSpace(upstream.H5Link)
-	if rawToken == "" || h5Link == "" || !isHTTPURL(h5Link) {
+	if rawToken == "" || h5Link == "" || !isHTTPSURL(h5Link) {
 		return nil, ErrInvalidAssetAuthorizationResponse
 	}
 

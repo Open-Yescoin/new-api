@@ -71,7 +71,7 @@ func fixedAuthorizationTime() time.Time {
 
 func authorizationServiceFixture() (*AuthorizationService, *fakeAssetAPI, *fakeAssetGroupRepository, *fakeAssetAuthorizationRepository) {
 	api := &fakeAssetAPI{responses: map[string]any{}, errors: map[string]error{}}
-	groups := &fakeAssetGroupRepository{groups: map[int]string{}}
+	groups := &fakeAssetGroupRepository{groups: map[int]string{}, updatedAt: map[int]int64{}}
 	sessions := &fakeAssetAuthorizationRepository{}
 	config := system_setting.VolcAssetSettings{
 		AccessKey:                    "ak",
@@ -85,12 +85,14 @@ func authorizationServiceFixture() (*AuthorizationService, *fakeAssetAPI, *fakeA
 func TestAuthorizationStatusDoesNotReturnGroupID(t *testing.T) {
 	service, api, groups, _ := authorizationServiceFixture()
 	groups.groups[42] = "group-secret-42"
+	groups.updatedAt[42] = 123
 
 	status, err := service.Status(42)
 
 	require.NoError(t, err)
 	require.True(t, status.Configured)
 	require.True(t, status.Authorized)
+	require.Equal(t, int64(123), status.UpdatedAt)
 	data, err := common.Marshal(status)
 	require.NoError(t, err)
 	require.NotContains(t, strings.ToLower(string(data)), "group")
@@ -121,6 +123,19 @@ func TestCreateAuthorizationSessionUsesConfiguredCallbackAndStoresDigest(t *test
 func TestCreateAuthorizationSessionRejectsMissingH5Data(t *testing.T) {
 	service, api, _, sessions := authorizationServiceFixture()
 	api.responses["CreateVisualValidateSession"] = CreateVisualValidateSessionResponse{BytedToken: "token-only"}
+
+	_, err := service.CreateSession(context.Background(), 42)
+
+	require.ErrorIs(t, err, ErrInvalidAssetAuthorizationResponse)
+	require.Empty(t, sessions.tokenHash)
+}
+
+func TestCreateAuthorizationSessionRejectsNonHTTPSH5Link(t *testing.T) {
+	service, api, _, sessions := authorizationServiceFixture()
+	api.responses["CreateVisualValidateSession"] = CreateVisualValidateSessionResponse{
+		BytedToken: "token-1",
+		H5Link:     "http://verify.example/session",
+	}
 
 	_, err := service.CreateSession(context.Background(), 42)
 

@@ -17,12 +17,12 @@ export const seedanceAssetsApi = {
       { skipErrorHandler: true },
     ),
   list: (params) =>
-    API.get('/api/seedance/assets/', {
+    API.get('/api/seedance/assets', {
       params,
       skipErrorHandler: true,
     }),
   create: (payload) =>
-    API.post('/api/seedance/assets/', payload, { skipErrorHandler: true }),
+    API.post('/api/seedance/assets', payload, { skipErrorHandler: true }),
   get: (id) =>
     API.get(`/api/seedance/assets/${encodeURIComponent(id)}`, {
       disableDuplicate: true,
