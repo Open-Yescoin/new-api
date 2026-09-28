@@ -1,0 +1,20 @@
+{
+  "project": "Token123 new-api Fork",
+  "created": "2026-07-01",
+  "mode": "brownfield",
+  "commit_docs": true,
+  "research": true,
+  "plan_check": true,
+  "verifier": true,
+  "drift_guard": true,
+  "model_profile": "inherit",
+  "granularity": "coarse",
+  "execution": "parallel",
+  "intel": {
+    "enabled": true,
+    "codegraph": true
+  },
+  "workflow": {
+    "subagent_timeout": 300000
+  }
+}
