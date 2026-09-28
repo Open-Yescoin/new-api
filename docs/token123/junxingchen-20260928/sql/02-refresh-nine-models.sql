@@ -31,6 +31,21 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'duplicate target model rows require manual review';
   END IF;
+  IF EXISTS (
+    SELECT 1 FROM abilities
+    WHERE enabled AND model IN ('gpt-5.6-sol','gpt-6-astra','gpt-5.6-terra','gpt-6-sol',
+      'claude-fable-5-1','claude-opus-5','claude-sonnet-5',
+      'gpt-image-2.5-flare','gpt-image-2.5-sunburst')
+      AND channel_id NOT IN (1,2,10,11,16,17,23,24,25,26,27,28,32,33,35,36,37,38,39,43)
+  ) THEN
+    RAISE EXCEPTION 'target model has an enabled route outside managed channels';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM options, LATERAL jsonb_array_elements(value::jsonb) AS r(rule)
+    WHERE key='DynamicTextPricing' AND rule->>'name'='junxing-gpt-pro-long-context'
+  ) THEN
+    RAISE EXCEPTION 'Junxing GPT long-context rule already exists';
+  END IF;
 END $$;
 
 CREATE SCHEMA IF NOT EXISTS token123_change_log;

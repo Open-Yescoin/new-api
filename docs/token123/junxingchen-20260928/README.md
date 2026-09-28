@@ -32,7 +32,7 @@
 
 按顺序执行 `sql/01-switch-api-host.sql`、`sql/02-refresh-nine-models.sql`、`sql/03-add-three-token-routes.sql`、`sql/04-route-gpt6-sol-legacy-host.sql`。四个文件均先以事务最终 `ROLLBACK` 演练，再真实提交。03 脚本以 psql 变量传入五枚密钥，仓库文件不保存密钥；新渠道为 49–53。04 把 `gpt-6-sol` 从新域名的三条混合 GPT 渠道移至旧域名专用渠道 57–59，复用同一组三枚不同 gpt-pro 令牌，其他三款 GPT 仍走新域名。备份全部保存在 `token123_change_log` schema，运行时 `public` 无操作备份表。回退按 **04 → 03 → 02 → 01** 逆序执行，先核对是否存在后续并发修改；04、03、02 的回退文件分别是 `sql/04-rollback-gpt6-sol-legacy-host.sql`、`sql/03-rollback-three-token-routes.sql`、`sql/02-rollback-nine-models.sql`。
 
-审查后对 02 的软删除模型重用逻辑及 03 的 Opus 5.5 精确 ID 回退逻辑做了安全修订；这些修订发生在生产提交后，生产当前数据无需重放。生产另建 `token123_change_log.token123_junxing_three_token_model_20260928` 保存现有 Opus 5.5 模型 ID，以使修订后的 03 回退脚本与已提交状态一致。04 和 03 回退脚本均经生产事务 `ROLLBACK` 演练通过。
+审查后对 01 的 schema 创建与遇错即停、02 的范围外路由及重复规则拦截和软删除模型重用、03 的 Opus 5.5 精确 ID 回退做了安全修订；这些修订发生在生产提交后，生产当前数据无需重放。执行前备份证实 02 新增的范围外路由及重复规则条件在原始生产状态均为零。生产另建 `token123_change_log.token123_junxing_three_token_model_20260928` 保存现有 Opus 5.5 模型 ID，以使修订后的 03 回退脚本与已提交状态一致。04 和 03 回退脚本均经生产事务 `ROLLBACK` 演练通过。
 
 2026-09-28 生产核对：目标 10 款各有三条 `premium` 启用能力；各组抽样的三枚渠道密钥互异；OpenAI/Anthropic 公开目录恰好 10 款。五枚新渠道令牌 `GET /v1/models` 分别列出 Opus 5.5 或两款图像。上游控制台显示新建的 2 枚 MAX 与 1 枚图像令牌均已启用、无限额度、永不过期、无模型与 IP 限制。
 

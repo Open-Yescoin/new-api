@@ -13,9 +13,9 @@
     ".planning/codebase/STRUCTURE.md": "3d0401baf3d0bcc271f5f91cd8488d9bed730380c591659564e375c0401d7925",
     ".planning/codebase/TESTING.md": "d7d71b086be439a3b141e50550a59f5f94028e583783b19d49eec1b3a45fa71c",
     ".planning/config.json": "b0e6efa6589c485d1d9b570e189ed2b255f6cca704a3ed3ce73a506149a2a833",
-    "docs/token123/junxingchen-20260928/README.md": "343084c1bcca7c00c96455aad215a8fec3f43a55c3961ffb08f6a14b6a9acbe7",
-    "docs/token123/junxingchen-20260928/sql/01-switch-api-host.sql": "6a8915ec1baee42b9473270e3c7dd3936bb62ec38630f70e4c63ac144b19e247",
-    "docs/token123/junxingchen-20260928/sql/02-refresh-nine-models.sql": "c877f9d9438fceb746be7252b776d09a80919c02ee8fadbe072258cfc2e56d42",
+    "docs/token123/junxingchen-20260928/README.md": "5a2b3e6a728f7842654fae31bef2176d26832a86eb8a474bcfbeb49b34d4c8bb",
+    "docs/token123/junxingchen-20260928/sql/01-switch-api-host.sql": "66e3c837f57700d147eb359f62c9ffbd04cdbadbe31f877c421e7f44b7bfa710",
+    "docs/token123/junxingchen-20260928/sql/02-refresh-nine-models.sql": "2d8466c4387dbfc1053179b33bd835f9fb227d469fa4de1125c941db2c67cb94",
     "docs/token123/junxingchen-20260928/sql/02-rollback-nine-models.sql": "93a98b9d6f9e9f649fa05bc2baa9372495a7eea9c96be8c48bc6f42cad9d40d3",
     "docs/token123/junxingchen-20260928/sql/03-add-three-token-routes.sql": "f1e5c6e55e35edb61cd6b4ddd98f7ca17f9c2862fdc58fbe573c05fed68a83b5",
     "docs/token123/junxingchen-20260928/sql/03-rollback-three-token-routes.sql": "41d8486302eda7af9e3f0500cd7e05e9f066104e48a0ccc07e119fcc8aeb67d4",
@@ -157,8 +157,8 @@
     "controller/wechat.go": "42e5676cd7399cfd1de038839df0cb4c0507e77684c9f1de074ad199c94f4da1",
     "docs/openapi/api.json": "59f10b0e44f3bfddfb54fe647bcae436f47f4a8365277d4b7e8275d81bf2e219",
     "docs/openapi/relay.json": "e2dad774dedded611dd1095c08965c7944f66b601d38fddee32ba33358069519",
-    "docs/token123/junxingchen-20260928/sql/01-switch-api-host.sql": "6a8915ec1baee42b9473270e3c7dd3936bb62ec38630f70e4c63ac144b19e247",
-    "docs/token123/junxingchen-20260928/sql/02-refresh-nine-models.sql": "c877f9d9438fceb746be7252b776d09a80919c02ee8fadbe072258cfc2e56d42",
+    "docs/token123/junxingchen-20260928/sql/01-switch-api-host.sql": "66e3c837f57700d147eb359f62c9ffbd04cdbadbe31f877c421e7f44b7bfa710",
+    "docs/token123/junxingchen-20260928/sql/02-refresh-nine-models.sql": "2d8466c4387dbfc1053179b33bd835f9fb227d469fa4de1125c941db2c67cb94",
     "docs/token123/junxingchen-20260928/sql/02-rollback-nine-models.sql": "93a98b9d6f9e9f649fa05bc2baa9372495a7eea9c96be8c48bc6f42cad9d40d3",
     "docs/token123/junxingchen-20260928/sql/03-add-three-token-routes.sql": "f1e5c6e55e35edb61cd6b4ddd98f7ca17f9c2862fdc58fbe573c05fed68a83b5",
     "docs/token123/junxingchen-20260928/sql/03-rollback-three-token-routes.sql": "41d8486302eda7af9e3f0500cd7e05e9f066104e48a0ccc07e119fcc8aeb67d4",
@@ -1043,7 +1043,7 @@
     "web/vercel.json": "25a37e530bd2fe09853149715bf1a4152dd14bf20c2df0869449a7ad807fe0c3",
     "web/vite.config.js": "703c3b6398e16e477a557ee286a33683cbac203597660dd128f2a4df9f75df8f"
   },
-  "graph_sha256": "8b983d69530cde941129eaa3ecd7b197ad56bb184733c0df119d2e57d4ec1504",
+  "graph_sha256": "f5cdd9748dd6947c1c9e858a0fca69fa23deb7059441cd9ff759fc2dc3067bf3",
   "graphify_code_files": 1018,
   "graphify_exclusions": [
     "web/dist",
@@ -1051,7 +1051,7 @@
     "graphify-out",
     ".planning"
   ],
-  "graphify_manifest_sha256": "540211df3d6308b9bbaefb67b31ebbc03ba66b753ff6e31ece9e3d18edd08274",
+  "graphify_manifest_sha256": "e6e90c5156643e5ad8e8cf515470afb07a7207901d782b7ecadbb7343dac1f23",
   "scan_root": "/Users/lyz/.codex/worktrees/new-api/junxingchen-20260928",
   "source_commit": "faeab5f5c66cd3b1d6d79489d1a79b86b40e7928"
 }

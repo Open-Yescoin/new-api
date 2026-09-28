@@ -3,9 +3,11 @@
 -- 执行前提：目标 6 渠道仍启用且 base_url 均为 https://ai.centos.hk。
 -- 备份只包含本次会改动的字段，不复制密钥。
 
+\set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '15s';
+CREATE SCHEMA IF NOT EXISTS token123_change_log;
 
 CREATE TABLE token123_change_log.token123_junxing_524_url_backup_20260928 AS
 SELECT id, base_url, status
